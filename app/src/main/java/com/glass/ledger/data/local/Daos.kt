@@ -16,11 +16,13 @@ interface AccountDao {
     @Query("SELECT * FROM accounts ORDER BY sortOrder ASC, id ASC")
     fun observeAll(): Flow<List<AccountEntity>>
 
-    @Query("SELECT COALESCE(SUM(balance), 0) FROM accounts WHERE type = 'FUND'")
-    fun observeFundTotal(): Flow<Double>
+    /** 资产总额 = 资金 + 充值 + 投资 */
+    @Query("SELECT COALESCE(SUM(balance), 0) FROM accounts WHERE type IN ('FUND','RECHARGE','INVEST')")
+    fun observeAssetTotal(): Flow<Double>
 
-    @Query("SELECT COALESCE(SUM(balance), 0) FROM accounts WHERE type = 'CREDIT'")
-    fun observeCreditTotal(): Flow<Double>
+    /** 负债总额（负数）= 信用 + 债务 */
+    @Query("SELECT COALESCE(SUM(balance), 0) FROM accounts WHERE type IN ('CREDIT','DEBT')")
+    fun observeLiabilityTotal(): Flow<Double>
 
     @Insert
     suspend fun insert(account: AccountEntity): Long
@@ -76,6 +78,9 @@ interface RecordDao {
 
     @Query("SELECT * FROM records WHERE accountId = :accountId")
     suspend fun getByAccount(accountId: Long): List<RecordEntity>
+
+    @Query("SELECT * FROM records WHERE accountId = :accountId ORDER BY dateEpochDay ASC, id ASC")
+    fun observeByAccount(accountId: Long): Flow<List<RecordEntity>>
 
     @Insert
     suspend fun insert(record: RecordEntity): Long

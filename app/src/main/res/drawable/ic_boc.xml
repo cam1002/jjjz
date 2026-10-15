@@ -1,13 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 中国银行：红底 + 古钱币 -->
+<!-- 中国银行：红色立体渐变 + 古钱「中」 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="24dp" android:height="24dp"
     android:viewportWidth="24" android:viewportHeight="24">
-    <path android:fillColor="#D32626"
-        android:pathData="M5,0 L19,0 A5,5 0 0,1 24,5 L24,19 A5,5 0 0,1 19,24 L5,24 A5,5 0 0,1 0,19 L0,5 A5,5 0 0,1 5,0 Z"/>
-    <path android:fillColor="#FFFFFF" android:fillType="evenOdd"
-        android:pathData="M12,4 a8,8 0 1,0 0.01,0 Z M12,6.2 a5.8,5.8 0 1,1 -0.01,0 Z"/>
-    <path android:fillColor="#FFFFFF"
-        android:pathData="M9.2,9.2 h5.6 v5.6 h-5.6 Z M10.6,10.6 h2.8 v2.8 h-2.8 Z"
-        android:fillType="evenOdd"/>
+    <path android:pathData="M5,0 L19,0 A5,5 0 0,1 24,5 L24,19 A5,5 0 0,1 19,24 L5,24 A5,5 0 0,1 0,19 L0,5 A5,5 0 0,1 5,0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="2" android:startY="1" android:endX="22" android:endY="23">
+                <item android:offset="0" android:color="#FFE84747"/>
+                <item android:offset="1" android:color="#FFB31212"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:pathData="M5,0 L19,0 A5,5 0 0,1 24,5 L24,9 C17.5,12.8 6.5,12.8 0,9 L0,5 A5,5 0 0,1 5,0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="12" android:startY="0" android:endX="12" android:endY="11">
+                <item android:offset="0" android:color="#33FFFFFF"/>
+                <item android:offset="1" android:color="#00FFFFFF"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="1.9"
+        android:pathData="M12,12 m-7.8,0 a7.8,7.8 0 1,0 15.6,0 a7.8,7.8 0 1,0 -15.6,0"/>
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="1.7" android:strokeLineCap="round"
+        android:pathData="M12,2 V22"/>
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="1.4"
+        android:pathData="M8.9,9.1 H15.1 V14.9 H8.9 Z"/>
 </vector>

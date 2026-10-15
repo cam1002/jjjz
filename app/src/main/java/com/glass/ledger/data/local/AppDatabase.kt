@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.glass.ledger.data.AccountEntity
 import com.glass.ledger.data.CategoryEntity
@@ -11,7 +12,7 @@ import com.glass.ledger.data.RecordEntity
 
 @Database(
     entities = [AccountEntity::class, CategoryEntity::class, RecordEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -31,7 +32,15 @@ abstract class AppDatabase : RoomDatabase() {
         private fun build(context: Context): AppDatabase =
             Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, "glass_ledger.db")
                 .addCallback(SeedCallback)
+                .addMigrations(MIGRATION_1_2)
                 .build()
+
+        /** v1 -> v2：流水增加 timeOfDay（时分）字段，老数据默认 00:00 */
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE records ADD COLUMN timeOfDay INTEGER NOT NULL DEFAULT 0")
+            }
+        }
 
         /** 首次建库时写入默认分类与账户，数据全部保存在本地 */
         private val SeedCallback = object : Callback() {

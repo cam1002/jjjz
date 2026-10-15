@@ -1,14 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 银行卡 -->
+<!-- 银行卡：蓝紫立体渐变 + 磁条卡 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="24dp" android:height="24dp"
     android:viewportWidth="24" android:viewportHeight="24">
-    <path android:fillColor="#5B6EF5"
-        android:pathData="M5,0 L19,0 A5,5 0 0,1 24,5 L24,19 A5,5 0 0,1 19,24 L5,24 A5,5 0 0,1 0,19 L0,5 A5,5 0 0,1 5,0 Z"/>
+    <path android:pathData="M5,0 L19,0 A5,5 0 0,1 24,5 L24,19 A5,5 0 0,1 19,24 L5,24 A5,5 0 0,1 0,19 L0,5 A5,5 0 0,1 5,0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="2" android:startY="1" android:endX="22" android:endY="23">
+                <item android:offset="0" android:color="#FF7C8BFF"/>
+                <item android:offset="1" android:color="#FF4C5CE8"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:pathData="M5,0 L19,0 A5,5 0 0,1 24,5 L24,9 C17.5,12.8 6.5,12.8 0,9 L0,5 A5,5 0 0,1 5,0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="12" android:startY="0" android:endX="12" android:endY="11">
+                <item android:offset="0" android:color="#33FFFFFF"/>
+                <item android:offset="1" android:color="#00FFFFFF"/>
+            </gradient>
+        </aapt:attr>
+    </path>
     <path android:fillColor="#FFFFFF"
-        android:pathData="M4,6.5 h16 a1.5,1.5 0 0,1 1.5,1.5 v8 a1.5,1.5 0 0,1 -1.5,1.5 h-16 a1.5,1.5 0 0,1 -1.5,-1.5 v-8 a1.5,1.5 0 0,1 1.5,-1.5 Z"/>
-    <path android:fillColor="#5B6EF5"
-        android:pathData="M2.5,9 h19 v2.4 h-19 Z"/>
-    <path android:fillColor="#5B6EF5"
-        android:pathData="M4.5,14 h5 v1.6 h-5 Z"/>
+        android:pathData="M2.5,6 A2.5,2.5 0 0 1 5,3.5 H19 A2.5,2.5 0 0 1 21.5,6 V18 A2.5,2.5 0 0 1 19,20.5 H5 A2.5,2.5 0 0 1 2.5,18 Z"/>
+    <path android:fillColor="#FF4353C8" android:pathData="M2.5,7.6 H21.5 V10.2 H2.5 Z"/>
+    <path android:fillColor="#FFFFD37A" android:pathData="M5,12.6 H8.6 V15.4 H5 Z"/>
+    <path android:fillColor="#FFA8B2F0" android:pathData="M12.6,14 m-0.8,0 a0.8,0.8 0 1,0 1.6,0 a0.8,0.8 0 1,0 -1.6,0"/>
+    <path android:fillColor="#FFA8B2F0" android:pathData="M15.4,14 m-0.8,0 a0.8,0.8 0 1,0 1.6,0 a0.8,0.8 0 1,0 -1.6,0"/>
+    <path android:fillColor="#FFA8B2F0" android:pathData="M18.2,14 m-0.8,0 a0.8,0.8 0 1,0 1.6,0 a0.8,0.8 0 1,0 -1.6,0"/>
 </vector>

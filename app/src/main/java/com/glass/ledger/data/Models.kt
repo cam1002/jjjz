@@ -3,8 +3,21 @@ package com.glass.ledger.data
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-/** 账户类型：资金账户（借记）/ 信用账户（透支） */
-enum class AccountType { FUND, CREDIT }
+/** 账户类型：资金 / 信用 / 充值 / 投资 / 债务 */
+enum class AccountType { FUND, CREDIT, RECHARGE, INVEST, DEBT }
+
+/** 各账户类型的展示文案（新增账户第一步的选择面板使用） */
+object AccountTypes {
+    val all: List<Triple<AccountType, String, String>> = listOf(
+        Triple(AccountType.FUND, "资金账户", "现金、储蓄卡、网络支付等"),
+        Triple(AccountType.CREDIT, "信用账户", "花呗、白条、信用卡等"),
+        Triple(AccountType.RECHARGE, "充值账户", "交通卡、饭卡、会员卡等"),
+        Triple(AccountType.INVEST, "投资账户", "基金、股票等"),
+        Triple(AccountType.DEBT, "债务账户", "借入、借出等")
+    )
+    fun label(type: AccountType) = all.first { it.first == type }.second
+    fun desc(type: AccountType) = all.first { it.first == type }.third
+}
 
 /** 流水类型：支出 / 收入 */
 enum class RecordType { EXPENSE, INCOME }
@@ -49,7 +62,9 @@ data class RecordEntity(
     val accountId: Long,
     val note: String = "",
     /** LocalDate.toEpochDay() */
-    val dateEpochDay: Long
+    val dateEpochDay: Long,
+    /** 当日秒数（时/分），LocalDateTime 的时间部分，0 = 00:00 */
+    val timeOfDay: Int = 0
 )
 
 /** 分类聚合结果（饼图数据） */

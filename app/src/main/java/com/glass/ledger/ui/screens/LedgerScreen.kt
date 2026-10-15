@@ -18,11 +18,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,6 +43,7 @@ import com.glass.ledger.ui.cnLabel
 import com.glass.ledger.ui.components.AccountIcon
 import com.glass.ledger.ui.components.CategoryIcon
 import com.glass.ledger.ui.components.GlassCard
+import com.glass.ledger.ui.components.GlassConfirmDialog
 import com.glass.ledger.ui.components.GlassCornerMedium
 import com.glass.ledger.ui.components.clickableNoRipple
 import com.glass.ledger.ui.components.liquidGlass
@@ -145,16 +144,11 @@ fun LedgerScreen(vm: MainViewModel, contentPadding: PaddingValues) {
     }
 
     deleting?.let { rec ->
-        AlertDialog(
-            onDismissRequest = { deleting = null },
-            title = { Text("删除这笔记录？") },
-            text = { Text("删除后账户余额将同步回退。") },
-            confirmButton = {
-                TextButton(onClick = { vm.deleteRecord(rec); deleting = null }) { Text("删除", color = ExpenseRed) }
-            },
-            dismissButton = {
-                TextButton(onClick = { deleting = null }) { Text("取消") }
-            }
+        GlassConfirmDialog(
+            title = "删除这笔记录？",
+            body = "删除后账户余额将同步回退。",
+            onDismiss = { deleting = null },
+            onConfirm = { vm.deleteRecord(rec); deleting = null }
         )
     }
 }
@@ -216,13 +210,12 @@ private fun RecordRow(rv: RecordView, onLongPress: () -> Unit) {
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(rv.categoryName, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = InkPrimary)
-            if (rv.record.note.isNotBlank()) {
-                Text(
-                    rv.record.note,
-                    fontSize = 12.sp,
-                    color = InkSecondary,
-                    maxLines = 1
-                )
+            val timeStr = if (rv.record.timeOfDay > 0)
+                "%02d:%02d".format(rv.record.timeOfDay / 3600, (rv.record.timeOfDay % 3600) / 60)
+            else ""
+            val sub = listOf(rv.record.note, timeStr).filter { it.isNotBlank() }.joinToString(" · ")
+            if (sub.isNotBlank()) {
+                Text(sub, fontSize = 12.sp, color = InkSecondary, maxLines = 1)
             }
         }
         Column(horizontalAlignment = Alignment.End) {
@@ -238,7 +231,7 @@ private fun RecordRow(rv: RecordView, onLongPress: () -> Unit) {
                     .liquidGlass(RoundedCornerShape(8.dp), alpha = 0.4f, elevation = 0.dp, highlight = false)
                     .padding(horizontal = 6.dp, vertical = 2.dp)
             ) {
-                AccountIcon(rv.accountIconId, size = 12.dp)
+                AccountIcon(rv.accountIconId, size = 12.dp, name = rv.accountName, colorArgb = rv.accountColor)
                 Spacer(Modifier.width(4.dp))
                 Text(rv.accountName, fontSize = 10.sp, color = InkSecondary)
             }

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 饭卡：粉红立体底 + 碗、筷子与热气 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path android:pathData="M5,0 L19,0 A5,5 0 0,1 24,5 L24,19 A5,5 0 0,1 19,24 L5,24 A5,5 0 0,1 0,19 L0,5 A5,5 0 0,1 5,0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="2" android:startY="1" android:endX="22" android:endY="23">
+                <item android:offset="0" android:color="#FF8C9C"/>
+                <item android:offset="1" android:color="#FFDD4060"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:pathData="M5,0 L19,0 A5,5 0 0,1 24,5 L24,9 C17.5,12.8 6.5,12.8 0,9 L0,5 A5,5 0 0,1 5,0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="12" android:startY="0" android:endX="12" android:endY="11">
+                <item android:offset="0" android:color="#33FFFFFF"/>
+                <item android:offset="1" android:color="#00FFFFFF"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- 碗 -->
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M4,12.5 H20 C20,16.8 16.4,19.4 12,19.4 C7.6,19.4 4,16.8 4,12.5 Z"/>
+    <!-- 碗沿高光 -->
+    <path android:fillColor="#FFE3E9"
+        android:pathData="M4,12.5 H20 V13.7 H4 Z"/>
+    <!-- 筷子 -->
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="1.4" android:strokeLineCap="round" android:fillColor="#00000000"
+        android:pathData="M13.6,3.6 L19.8,9.8 M16.6,3.2 L21.6,7.4"/>
+    <!-- 热气 -->
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="1.1" android:strokeLineCap="round" android:fillColor="#00000000"
+        android:pathData="M8.6,9.8 C7.6,8.6 8.6,7.4 7.8,6.2 M11.4,9.8 C10.4,8.6 11.4,7.4 10.6,6.2"/>
+</vector>

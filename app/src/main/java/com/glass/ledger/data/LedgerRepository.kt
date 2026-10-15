@@ -14,8 +14,8 @@ class LedgerRepository(private val db: AppDatabase) {
 
     // ---------- 账户 ----------
     fun observeAccounts(): Flow<List<AccountEntity>> = accountDao.observeAll()
-    fun observeFundTotal(): Flow<Double> = accountDao.observeFundTotal()
-    fun observeCreditTotal(): Flow<Double> = accountDao.observeCreditTotal()
+    fun observeAssetTotal(): Flow<Double> = accountDao.observeAssetTotal()
+    fun observeLiabilityTotal(): Flow<Double> = accountDao.observeLiabilityTotal()
 
     suspend fun addAccount(
         name: String,
@@ -26,13 +26,17 @@ class LedgerRepository(private val db: AppDatabase) {
         creditLimit: Double?
     ) {
         val order = System.currentTimeMillis().toInt()
+        // 信用/债务账户：余额为负数表示欠款
+        val signed = if (type == AccountType.CREDIT || type == AccountType.DEBT) {
+            -initialBalance.coerceAtLeast(0.0)
+        } else initialBalance
         accountDao.insert(
             AccountEntity(
                 name = name,
                 iconId = iconId,
                 colorArgb = colorArgb,
                 type = type,
-                balance = if (type == AccountType.CREDIT) -initialBalance.coerceAtLeast(0.0) else initialBalance,
+                balance = signed,
                 creditLimit = creditLimit,
                 sortOrder = order
             )
@@ -66,6 +70,10 @@ class LedgerRepository(private val db: AppDatabase) {
 
     fun observeExpenseByCategory(start: Long, end: Long): Flow<List<CategorySum>> =
         recordDao.observeExpenseByCategory(start, end)
+
+    /** 某账户的全部流水（详情页聚合用） */
+    fun observeRecordsByAccount(accountId: Long): Flow<List<RecordEntity>> =
+        recordDao.observeByAccount(accountId)
 
     /** 记一笔并同步账户余额 */
     suspend fun addRecord(record: RecordEntity) {

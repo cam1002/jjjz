@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -29,6 +31,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.glass.ledger.data.IconCatalog
+import com.glass.ledger.ui.theme.InkPrimary
 import com.glass.ledger.ui.theme.InkSecondary
 
 /** 大玻璃卡片容器 */
@@ -46,14 +49,37 @@ fun GlassCard(
     ) { content() }
 }
 
-/** 账户图标：内置银行/APP 矢量图 */
+/** 账户图标：内置银行/APP 矢量图；iconId = "other" 时渲染底色块 + 账户名首字 */
 @Composable
-fun AccountIcon(iconId: String, size: Dp = 40.dp, modifier: Modifier = Modifier) {
-    Image(
-        painter = painterResource(IconCatalog.resOf(iconId)),
-        contentDescription = IconCatalog.labelOf(iconId),
-        modifier = modifier.size(size).clip(RoundedCornerShape(size / 3.2f))
-    )
+fun AccountIcon(
+    iconId: String,
+    size: Dp = 40.dp,
+    modifier: Modifier = Modifier,
+    name: String = "",
+    colorArgb: Int = 0xFF5B6EF5.toInt()
+) {
+    if (iconId == IconCatalog.OTHER_ID) {
+        Box(
+            modifier.size(size).clip(RoundedCornerShape(size / 3.2f)).background(Color(colorArgb)),
+            contentAlignment = Alignment.Center
+        ) {
+            val letter = name.trim().firstOrNull()?.toString() ?: "其"
+            val letterSize = with(androidx.compose.ui.platform.LocalDensity.current) { (size / 2.2f).toSp() }
+            Text(
+                letter,
+                color = Color.White,
+                fontSize = letterSize,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1
+            )
+        }
+    } else {
+        Image(
+            painter = painterResource(IconCatalog.resOf(iconId)),
+            contentDescription = IconCatalog.labelOf(iconId),
+            modifier = modifier.size(size).clip(RoundedCornerShape(size / 3.2f))
+        )
+    }
 }
 
 /** 分类图标：圆形浅色底 + 主题色 Material 图标 */
@@ -132,3 +158,22 @@ fun Modifier.clickableNoRipple(onClick: () -> Unit): Modifier = this.then(
         onClick = onClick
     )
 )
+
+/** 全屏页左上角玻璃关闭按钮 */
+@Composable
+fun GlassCloseButton(onDismiss: () -> Unit, modifier: Modifier = Modifier) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .size(40.dp)
+            .liquidGlass(CircleShape, alpha = 0.6f, elevation = 3.dp)
+            .clickableNoRipple(onDismiss)
+    ) {
+        Icon(
+            Icons.Filled.Close,
+            contentDescription = "关闭",
+            tint = InkPrimary,
+            modifier = Modifier.size(20.dp)
+        )
+    }
+}
