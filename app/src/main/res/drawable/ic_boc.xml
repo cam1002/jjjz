@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 中国银行：红底 + 古钱币 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path android:fillColor="#D32626"
+        android:pathData="M5,0 L19,0 A5,5 0 0,1 24,5 L24,19 A5,5 0 0,1 19,24 L5,24 A5,5 0 0,1 0,19 L0,5 A5,5 0 0,1 5,0 Z"/>
+    <path android:fillColor="#FFFFFF" android:fillType="evenOdd"
+        android:pathData="M12,4 a8,8 0 1,0 0.01,0 Z M12,6.2 a5.8,5.8 0 1,1 -0.01,0 Z"/>
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M9.2,9.2 h5.6 v5.6 h-5.6 Z M10.6,10.6 h2.8 v2.8 h-2.8 Z"
+        android:fillType="evenOdd"/>
+</vector>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 支付宝：蓝底 + 白色"支"字形 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path android:fillColor="#1677FF"
+        android:pathData="M5,0 L19,0 A5,5 0 0,1 24,5 L24,19 A5,5 0 0,1 19,24 L5,24 A5,5 0 0,1 0,19 L0,5 A5,5 0 0,1 5,0 Z"/>
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M6,5.5 h12 v2.2 h-12 Z"/>
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M11,5.5 h2 v5 h-2 Z"/>
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M6.8,11.5 C8.5,14.5 11.5,16.5 15,16.8 L17.5,14.2 C17.8,15 18,15.9 18,16.8 C18,17.4 17.9,18 17.7,18.5 L6.5,18.5 L6.5,16.3 L12.8,16.3 C10.2,15.6 8.2,14 6.9,11.9 Z"
+        android:fillType="nonZero"/>
+</vector>

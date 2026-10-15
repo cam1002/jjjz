@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 建设银行：深蓝底 + 白色"C"形 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path android:fillColor="#0A5296"
+        android:pathData="M5,0 L19,0 A5,5 0 0,1 24,5 L24,19 A5,5 0 0,1 19,24 L5,24 A5,5 0 0,1 0,19 L0,5 A5,5 0 0,1 5,0 Z"/>
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M16.5,6.5 C15.2,5.2 13.7,4.5 12,4.5 C7.9,4.5 4.5,7.9 4.5,12 C4.5,16.1 7.9,19.5 12,19.5 C13.7,19.5 15.2,18.8 16.5,17.5 L14.7,15.7 C13.9,16.5 13,17 12,17 C9.2,17 7,14.8 7,12 C7,9.2 9.2,7 12,7 C13,7 13.9,7.5 14.7,8.3 Z"/>
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M18.5,9.5 h-4 v2.2 h1.6 v4.8 h2.4 Z"/>
+</vector>

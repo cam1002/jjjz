@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 白条：红底 + 票据 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path android:fillColor="#E4393C"
+        android:pathData="M5,0 L19,0 A5,5 0 0,1 24,5 L24,19 A5,5 0 0,1 19,24 L5,24 A5,5 0 0,1 0,19 L0,5 A5,5 0 0,1 5,0 Z"/>
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M6.5,4 h11 v16 l-2.2,-1.6 -2.3,1.6 -2.2,-1.6 -2.2,1.6 -2.1,-1.6 -0,-14.4 Z"/>
+    <path android:fillColor="#E4393C"
+        android:pathData="M9,8 h6 v1.6 h-6 Z M9,11.5 h6 v1.6 h-6 Z"/>
+</vector>
