@@ -8,29 +8,26 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
+import com.glass.ledger.ui.base.GlassDialogPanel
+import com.glass.ledger.ui.base.GlassTokens
 import com.glass.ledger.ui.theme.ExpenseRed
 import com.glass.ledger.ui.theme.InkPrimary
 import com.glass.ledger.ui.theme.InkSecondary
 
 /**
- * 应用内统一的玻璃确认弹窗（删除账户 / 删除记录）。
- * 替代 Material AlertDialog，避免顶部状态栏出现灰色遮罩，
- * 并与整体液态玻璃视觉保持一致。
+ * 应用内统一的确认弹窗（删除账户 / 删除记录）。
+ * 外壳复用 Base 层 [GlassDialogPanel]，只保留"正文 + 双按钮"这部分差异内容。
  */
 @Composable
 fun GlassConfirmDialog(
@@ -40,55 +37,39 @@ fun GlassConfirmDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)
+    GlassDialogPanel(
+        title = title,
+        onDismiss = null,
+        divider = false
     ) {
-        DialogEdgeToEdge()
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 44.dp)
-                .shadow(18.dp, RoundedCornerShape(24.dp))
-                .clip(RoundedCornerShape(24.dp))
-                .background(Brush.verticalGradient(listOf(Color(0xF2FFFFFF), Color(0xECEDF0FB))))
-                .padding(start = 22.dp, end = 22.dp, top = 22.dp, bottom = 18.dp)
+        Text(
+            body,
+            fontSize = 13.5.sp,
+            color = InkSecondary,
+            lineHeight = 20.sp
+        )
+        Spacer(Modifier.height(20.dp))
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                title,
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Bold,
-                color = InkPrimary
+            GlassDialogButton(
+                label = "取消",
+                modifier = Modifier.weight(1f),
+                onClick = onDismiss
             )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                body,
-                fontSize = 13.5.sp,
-                color = InkSecondary,
-                lineHeight = 20.sp
+            GlassDialogButton(
+                label = confirmLabel,
+                modifier = Modifier.weight(1f),
+                danger = true,
+                onClick = onConfirm
             )
-            Spacer(Modifier.height(20.dp))
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                GlassDialogButton(
-                    label = "取消",
-                    modifier = Modifier.weight(1f),
-                    onClick = onDismiss
-                )
-                GlassDialogButton(
-                    label = confirmLabel,
-                    modifier = Modifier.weight(1f),
-                    danger = true,
-                    onClick = onConfirm
-                )
-            }
         }
     }
 }
 
+/** 确认弹窗里的按钮：普通态走统一玻璃面板，危险态走红色渐变 */
 @Composable
 private fun GlassDialogButton(
     label: String,
@@ -96,16 +77,23 @@ private fun GlassDialogButton(
     danger: Boolean = false,
     onClick: () -> Unit
 ) {
-    val shape = RoundedCornerShape(16.dp)
-    val background = if (danger) {
-        Brush.verticalGradient(listOf(Color(0xFFFF7A66), ExpenseRed))
-    } else {
-        Brush.verticalGradient(listOf(Color(0xB3FFFFFF), Color(0x99E6EAF7)))
-    }
     Column(
         modifier
-            .clip(shape)
-            .background(background)
+            .clip(GlassTokens.Corner.Chip)
+            .then(
+                if (danger) {
+                    Modifier.background(
+                        Brush.verticalGradient(listOf(Color(0xFFFF7A66), ExpenseRed)),
+                        GlassTokens.Corner.Chip
+                    )
+                } else {
+                    Modifier.liquidGlass(
+                        shape = GlassTokens.Corner.Chip,
+                        alpha = GlassTokens.Surface.Chip,
+                        elevation = GlassTokens.Elevation.Chip
+                    )
+                }
+            )
             .clickableNoRipple(onClick = onClick)
             .padding(vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally

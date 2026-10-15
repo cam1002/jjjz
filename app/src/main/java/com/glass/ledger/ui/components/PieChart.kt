@@ -77,10 +77,10 @@ fun PieChart(
         if (total > 0) {
             Box(contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(centerTitle, style = TextStyle(fontSize = 11.sp, color = Color(0xFF5A5F73)))
+                    Text(centerTitle, style = TextStyle(fontSize = 11.sp, color = Color(0xFF4A5065)))
                     Text(
                         centerValue,
-                        style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1C1E2A))
+                        style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF161821))
                     )
                 }
             }
@@ -90,7 +90,7 @@ fun PieChart(
 
 private fun DrawScope.drawEmptyRing(center: Offset, radius: Float, thickness: Float) {
     drawCircle(
-        color = Color.White.copy(alpha = 0.5f),
+        color = Color(0xFFBFC9E8),
         radius = radius,
         center = center,
         style = Stroke(width = thickness)

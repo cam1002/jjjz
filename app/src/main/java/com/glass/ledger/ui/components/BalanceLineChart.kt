@@ -160,7 +160,7 @@ fun BalanceLineChart(
         pts.forEachIndexed { i, p ->
             if (i >= labels.size) return@forEachIndexed
             val sel = i == highlightIndex
-            labelPaint.color = android.graphics.Color.parseColor(if (sel) "#1C1E2A" else "#8A8FA3")
+            labelPaint.color = android.graphics.Color.parseColor(if (sel) "#161821" else "#6A7088")
             labelPaint.isFakeBoldText = sel
             drawContext.canvas.nativeCanvas.drawText(
                 labels[i],
@@ -175,7 +175,7 @@ fun BalanceLineChart(
             val hp = pts[highlightIndex]
             val tipText = String.format(Locale.US, "%,.2f", values[highlightIndex])
             tipPaint.textSize = 11.5.sp.toPx()
-            tipPaint.color = android.graphics.Color.parseColor("#1C1E2A")
+            tipPaint.color = android.graphics.Color.parseColor("#161821")
             val textW = tipPaint.measureText(tipText)
             val chipW = textW + 26.dp.toPx()
             val chipH = 30.dp.toPx()

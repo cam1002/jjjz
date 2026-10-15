@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -40,11 +39,11 @@ import com.glass.ledger.ui.MainViewModel
 import com.glass.ledger.ui.cn
 import com.glass.ledger.ui.cnDate
 import com.glass.ledger.ui.cnLabel
+import com.glass.ledger.ui.base.GlassTokens
 import com.glass.ledger.ui.components.AccountIcon
 import com.glass.ledger.ui.components.CategoryIcon
 import com.glass.ledger.ui.components.GlassCard
 import com.glass.ledger.ui.components.GlassConfirmDialog
-import com.glass.ledger.ui.components.GlassCornerMedium
 import com.glass.ledger.ui.components.clickableNoRipple
 import com.glass.ledger.ui.components.liquidGlass
 import com.glass.ledger.ui.money
@@ -131,7 +130,7 @@ fun LedgerScreen(vm: MainViewModel, contentPadding: PaddingValues) {
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text("${group.date.cnDate()} ${group.date.cnLabel()}", fontSize = 13.sp, color = InkSecondary)
-                            Text("  |  ", fontSize = 13.sp, color = InkSecondary.copy(alpha = 0.4f))
+                            Text("  |  ", fontSize = 13.sp, color = InkSecondary.copy(alpha = 0.6f))
                             Text("支 ${group.expense.money()}", fontSize = 13.sp, color = ExpenseRed)
                         }
                     }
@@ -158,7 +157,11 @@ private fun MonthNavigator(month: YearMonth, onShift: (Long) -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
-        modifier = Modifier.liquidGlass(RoundedCornerShape(50), alpha = 0.5f, elevation = 3.dp)
+        modifier = Modifier.liquidGlass(
+            shape = GlassTokens.Corner.Pill,
+            alpha = GlassTokens.Surface.Chip,
+            elevation = GlassTokens.Elevation.Field
+        )
     ) {
         Icon(
             Icons.AutoMirrored.Filled.KeyboardArrowLeft, "上一月",
@@ -201,7 +204,11 @@ private fun RecordRow(rv: RecordView, onLongPress: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
-            .liquidGlass(GlassCornerMedium, alpha = 0.55f, elevation = 5.dp)
+            .liquidGlass(
+                shape = GlassTokens.Corner.Field,
+                alpha = GlassTokens.Surface.Card,
+                elevation = GlassTokens.Elevation.Card
+            )
             .clickableNoRipple(onLongPress)
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -228,7 +235,12 @@ private fun RecordRow(rv: RecordView, onLongPress: () -> Unit) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(top = 3.dp)
-                    .liquidGlass(RoundedCornerShape(8.dp), alpha = 0.4f, elevation = 0.dp, highlight = false)
+                    .liquidGlass(
+                        shape = GlassTokens.Corner.Tag,
+                        alpha = GlassTokens.Surface.Chip,
+                        elevation = GlassTokens.Elevation.Flat,
+                        highlight = false
+                    )
                     .padding(horizontal = 6.dp, vertical = 2.dp)
             ) {
                 AccountIcon(rv.accountIconId, size = 12.dp, name = rv.accountName, colorArgb = rv.accountColor)

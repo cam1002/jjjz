@@ -2,7 +2,6 @@ package com.glass.ledger.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
@@ -12,31 +11,34 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
+import com.glass.ledger.ui.base.GlassTokens
+
 /**
- * iOS 液态玻璃风格 Modifier：
- * 半透明白色渐变表面 + 高光描边 + 柔和投影。
- * 配合 [GlassBackdrop] 的彩色光斑背景形成"透而不透"的折射感。
+ * 液态玻璃表面的唯一实现。
+ * 尺寸、透明度、清晰度等参数全部来自 Base 层 [GlassTokens]；
+ * 想整体调风格请改 GlassTokens，不要在这里或各页面写数值。
  */
 fun Modifier.liquidGlass(
-    shape: Shape = RoundedCornerShape(28.dp),
-    alpha: Float = 0.62f,
-    elevation: Dp = 12.dp,
+    shape: Shape = GlassTokens.Corner.Dialog,
+    alpha: Float = GlassTokens.Surface.Card,
+    elevation: Dp = GlassTokens.Elevation.Section,
     highlight: Boolean = true
 ): Modifier {
+    val a = GlassTokens.surfaceAlpha(alpha)
     var m: Modifier = this
         .shadow(
             elevation = elevation,
             shape = shape,
             clip = false,
-            ambientColor = Color.White.copy(alpha = 0.35f),
-            spotColor = Color(0x4D334090)
+            ambientColor = Color.White.copy(alpha = 0.30f),
+            spotColor = Color(0x59333F7A)
         )
         .background(
             brush = Brush.linearGradient(
                 colors = listOf(
-                    Color.White.copy(alpha = alpha),
-                    Color.White.copy(alpha = alpha * 0.55f),
-                    Color(0xFFEEF1FF).copy(alpha = alpha * 0.75f)
+                    Color.White.copy(alpha = a),
+                    Color(0xFFFAFBFF).copy(alpha = a * 0.94f),
+                    Color(0xFFE9EDFB).copy(alpha = a * 0.97f)
                 ),
                 start = Offset.Zero,
                 end = Offset.Infinite
@@ -44,13 +46,13 @@ fun Modifier.liquidGlass(
             shape = shape
         )
     if (highlight) {
-        m = m.border(width = 1.2.dp, color = Color.White.copy(alpha = 0.85f), shape = shape)
+        m = m.border(width = 1.2.dp, color = Color.White.copy(alpha = 0.9f), shape = shape)
     }
     return m
 }
 
-/** 常用圆角 */
-val GlassCornerLarge = RoundedCornerShape(30.dp)
-val GlassCornerMedium = RoundedCornerShape(22.dp)
-val GlassCornerSmall = RoundedCornerShape(14.dp)
-val GlassCornerPill = RoundedCornerShape(percent = 50)
+/** 常用圆角（转发到 GlassTokens.Corner，保留旧名字兼容已有页面） */
+val GlassCornerLarge = GlassTokens.Corner.Card
+val GlassCornerMedium = GlassTokens.Corner.Field
+val GlassCornerSmall = GlassTokens.Corner.Small
+val GlassCornerPill = GlassTokens.Corner.Pill

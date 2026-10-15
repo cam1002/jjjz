@@ -1,12 +1,9 @@
 package com.glass.ledger.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -19,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Icon
@@ -32,7 +28,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -42,10 +37,11 @@ import com.glass.ledger.data.AccountEntity
 import com.glass.ledger.data.AccountType
 import com.glass.ledger.data.AccountTypes
 import com.glass.ledger.ui.MainViewModel
+import com.glass.ledger.ui.base.GlassBrandButton
+import com.glass.ledger.ui.base.GlassTokens
 import com.glass.ledger.ui.components.AccountIcon
 import com.glass.ledger.ui.components.GlassCard
 import com.glass.ledger.ui.components.GlassConfirmDialog
-import com.glass.ledger.ui.components.GlassCornerMedium
 import com.glass.ledger.ui.components.clickableNoRipple
 import com.glass.ledger.ui.components.liquidGlass
 import com.glass.ledger.ui.money
@@ -166,19 +162,11 @@ fun AssetsScreen(
 
 @Composable
 private fun Box_GlassPlus(onClick: () -> Unit) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .size(52.dp)
-            .shadow(6.dp, RoundedCornerShape(16.dp))
-            .background(
-                androidx.compose.ui.graphics.Brush.linearGradient(
-                    listOf(Color(0xFF6C7CFF), Color(0xFF5B6EF5))
-                ),
-                RoundedCornerShape(16.dp)
-            )
-            .border(1.dp, Color.White.copy(alpha = 0.6f), RoundedCornerShape(16.dp))
-            .clickableNoRipple(onClick)
+    GlassBrandButton(
+        onClick = onClick,
+        modifier = Modifier.size(52.dp),
+        shape = GlassTokens.Corner.Chip,
+        elevation = GlassTokens.Elevation.Card
     ) {
         Icon(Icons.Filled.Add, contentDescription = "添加账户", tint = Color.White)
     }
@@ -208,7 +196,11 @@ private fun AccountRow(acc: AccountEntity, onClick: () -> Unit, onLongPress: () 
     Row(
         Modifier
             .fillMaxWidth()
-            .liquidGlass(GlassCornerMedium, alpha = 0.55f, elevation = 5.dp)
+            .liquidGlass(
+                shape = GlassTokens.Corner.Field,
+                alpha = GlassTokens.Surface.Card,
+                elevation = GlassTokens.Elevation.Card
+            )
             .combinedClickable(
                 interactionSource = interactionSource,
                 indication = null,

@@ -1,7 +1,6 @@
 package com.glass.ledger.ui.theme
 
 import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
@@ -14,7 +13,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import androidx.core.view.WindowCompat
+import com.glass.ledger.ui.base.GlassWindow
 
 private val GlassColorScheme = lightColorScheme(
     primary = Color(0xFF5B6EF5),
@@ -45,11 +44,8 @@ fun GlassLedgerTheme(content: @Composable () -> Unit) {
     if (!view.isInEditMode) {
         SideEffect {
             val window = (context as? Activity)?.window ?: return@SideEffect
-            WindowCompat.setDecorFitsSystemWindows(window, false)
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                window.isNavigationBarContrastEnforced = false
-            }
+            // 与所有弹窗共用 Base 层实现，保证任何界面打开后状态栏风格一致
+            GlassWindow.style(window, view, dimAmount = null)
         }
     }
     MaterialTheme(

@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.AccountBalanceWallet
@@ -25,9 +24,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.glass.ledger.ui.base.GlassTokens
 import com.glass.ledger.ui.theme.InkSecondary
 
 enum class Tab(val label: String, val icon: ImageVector) {
@@ -52,7 +51,11 @@ fun GlassBottomBar(
     ) {
         Row(
             modifier = Modifier
-                .liquidGlass(shape = GlassCornerPill, alpha = 0.68f, elevation = 16.dp)
+                .liquidGlass(
+                    shape = GlassTokens.Corner.Pill,
+                    alpha = GlassTokens.Surface.Bar,
+                    elevation = GlassTokens.Elevation.Bar
+                )
                 .height(64.dp)
                 .padding(horizontal = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -68,7 +71,7 @@ fun GlassBottomBar(
 @Composable
 private fun RowScope.TabItem(tab: Tab, selected: Boolean, onClick: () -> Unit) {
     val contentColor by animateColorAsState(
-        if (selected) Color(0xFF3D4CC8) else InkSecondary,
+        if (selected) GlassTokens.AccentText else InkSecondary,
         label = "tabColor"
     )
     Column(
@@ -80,9 +83,9 @@ private fun RowScope.TabItem(tab: Tab, selected: Boolean, onClick: () -> Unit) {
             .then(
                 if (selected) {
                     Modifier.liquidGlass(
-                        shape = RoundedCornerShape(18.dp),
-                        alpha = 0.5f,
-                        elevation = 2.dp,
+                        shape = GlassTokens.Corner.Chip,
+                        alpha = GlassTokens.Surface.Chip,
+                        elevation = GlassTokens.Elevation.Chip,
                         highlight = false
                     )
                 } else Modifier

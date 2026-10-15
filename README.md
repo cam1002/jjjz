@@ -25,7 +25,8 @@ GlassLedger/
 └── app/src/main/
     ├── AndroidManifest.xml
     ├── res/
-    │   ├── drawable/                    # 15 个内置矢量图标：微信、支付宝、工/建/农/中/农商 + 通用
+    │   ├── drawable/                    # 19 个内置立体渐变矢量图标：微信、支付宝、工/建/农/中、
+    │   │                                # 花呗/白条/公交卡/饭卡/会员卡/理财/金币/借贷 + 通用卡/钱包/现金/手机
     │   ├── values/                      # strings / themes / colors
     │   └── mipmap-anydpi-v26/           # 自适应启动图标
     └── java/com/glass/ledger/
@@ -37,6 +38,8 @@ GlassLedger/
         │   ├── LedgerRepository.kt      # 唯一读写出口（记账同步余额）
         │   └── local/                   # Daos.kt / AppDatabase.kt（含首次种子数据）
         └── ui/
+            ├── base/                    # ★ 设计基座：GlassTokens / GlassWindow /
+            │                            #   GlassPage / GlassDialog（新界面一律从这里起步）
             ├── MainViewModel.kt         # 月份流水、月概览、周/月统计聚合
             ├── UiUtils.kt               # 金额/日期格式化、周月区间
             ├── theme/                   # 液态玻璃配色与主题
@@ -44,6 +47,26 @@ GlassLedger/
             │                            # GlassWidgets / PieChart / CategoryIcons
             └── screens/                 # Ledger / Assets / Stats 三页 + 两个记账/开户面板
 ```
+
+## 设计规范（Base 层，`ui/base/`）
+
+所有界面的状态栏、玻璃质感、圆角、间距、字号都收敛到这一层，**新增界面必须复用，不允许再写死数值**。
+
+| 文件 | 提供什么 | 用法 |
+|---|---|---|
+| `GlassTokens.kt` | 唯一的设计数值来源：`CLARITY` 全局清晰度、`Corner/Elevation/Surface/Space/Type` 档位、`PageBackground/PanelBackground/BrandBrush/AccentText/BrandSoft` 颜色 | `GlassTokens.Corner.Field`、`GlassTokens.Surface.Card`、`GlassTokens.Elevation.Chip` |
+| `GlassWindow.kt` | 系统栏唯一实现（沉浸式、透明状态栏/导航栏、浅色图标、禁用对比度遮罩）；`GlassDialogWindow()` 给 Dialog 窗口套用同一套 | Activity 在 `GlassLedgerTheme` 里调用；全屏页弹窗自动带上 |
+| `GlassPage.kt` | `GlassPage`（页面骨架：底色渐变 + 光斑 + 状态栏留白 + 统一顶栏 + 左右留白 + 滚动/键盘避让）、`GlassPageDialog` 的全屏版、`GlassTopBar`、`GlassIconButton`（40dp 圆钮）、`GlassBrandButton`（品牌渐变实心钮：FAB、「+」） | 新页面：`GlassPage(title, onBack/onClose) { ... }`；内容自己放 LazyColumn 时传 `scroll = false` |
+| `GlassDialog.kt` | `GlassDialogPanel`（居中玻璃弹窗骨架：圆角卡 + 标题行 + 可选关闭 + 分隔线）、`GlassPageDialog`（全屏表单弹窗）、`GlassDialogOption`（弹窗选项行）、`GlassPrimaryButton`（主按钮：保存/确定，禁用态自动降级为玻璃）、`GlassFieldDivider` | 新弹窗：`GlassDialogPanel(title, onDismiss) { ... }` |
+
+配套约定：
+
+- `Modifier.liquidGlass(shape, alpha, elevation)` 是唯一玻璃实现，`alpha` 只传 `GlassTokens.Surface.*` 档位，最终透明度由 `surfaceAlpha()` + `CLARITY` 统一映射；想整体调浓/调淡只改 `GlassTokens.CLARITY`。
+- 旧的 `GlassCornerLarge/Medium/Small/Pill` 只是 `GlassTokens.Corner.*` 的别名，新代码直接用 token。
+- 主按钮的品牌渐变只能来自 `GlassTokens.BrandBrush`（`GlassPrimaryButton` / `GlassBrandButton` 内部使用），别再手写 `listOf(0xFF6C7CFF, 0xFF5B6EF5)`。
+- 一级 Tab 页（记账/资产/统计）背景由 `MainActivity` 统一提供，因此它们只加 `contentPadding`；二级页、覆盖层、全屏弹窗一律走 `GlassPage` / `GlassPageDialog`，状态栏天然一致。
+
+已接入 Base 层的界面：`LedgerScreen`、`AssetsScreen`、`StatsScreen`、`AccountDetailScreen`、`AddRecordSheet`、`AddAccountSheet`、`AccountTypePickerDialog`、`DateTimeWheelDialog`、`GlassConfirmDialog`、`GlassBottomBar`、`GlassCard/GlassSegmented`、`MainActivity` FAB。
 
 ## 构建运行
 

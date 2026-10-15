@@ -88,7 +88,7 @@ fun NumberWheel(
                 .height(itemHeight)
                 .align(Alignment.Center)
                 .clip(RoundedCornerShape(12.dp))
-                .background(Color.White.copy(alpha = 0.55f))
+                .background(Color.White.copy(alpha = 0.82f))
         )
         LazyColumn(
             state = listState,

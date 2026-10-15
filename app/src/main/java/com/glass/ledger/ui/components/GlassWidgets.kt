@@ -31,6 +31,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.glass.ledger.data.IconCatalog
+import com.glass.ledger.ui.base.GlassIconButton
+import com.glass.ledger.ui.base.GlassTokens
 import com.glass.ledger.ui.theme.InkPrimary
 import com.glass.ledger.ui.theme.InkSecondary
 
@@ -44,7 +46,11 @@ fun GlassCard(
     Column(
         modifier
             .fillMaxWidth()
-            .liquidGlass(GlassCornerLarge)
+            .liquidGlass(
+                shape = GlassTokens.Corner.Card,
+                alpha = GlassTokens.Surface.Card,
+                elevation = GlassTokens.Elevation.Section
+            )
             .padding(contentPadding)
     ) { content() }
 }
@@ -125,7 +131,11 @@ fun <T> GlassSegmented(
 ) {
     Row(
         modifier
-            .liquidGlass(GlassCornerPill, alpha = 0.5f, elevation = 4.dp)
+            .liquidGlass(
+                shape = GlassTokens.Corner.Pill,
+                alpha = GlassTokens.Surface.Chip,
+                elevation = GlassTokens.Elevation.Field
+            )
             .padding(4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
@@ -133,14 +143,21 @@ fun <T> GlassSegmented(
             val isSel = value == selected
             Box(
                 Modifier
-                    .then(if (isSel) Modifier.liquidGlass(GlassCornerPill, alpha = 0.75f, elevation = 2.dp, highlight = false) else Modifier)
+                    .then(
+                        if (isSel) Modifier.liquidGlass(
+                            shape = GlassTokens.Corner.Pill,
+                            alpha = GlassTokens.Surface.Selected,
+                            elevation = GlassTokens.Elevation.Chip,
+                            highlight = false
+                        ) else Modifier
+                    )
                     .padding(horizontal = 22.dp, vertical = 8.dp)
                     .clickableNoRipple { onSelect(value) },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     label,
-                    color = if (isSel) Color(0xFF3D4CC8) else InkSecondary,
+                    color = if (isSel) GlassTokens.AccentText else InkSecondary,
                     fontSize = 14.sp,
                     fontWeight = if (isSel) FontWeight.SemiBold else FontWeight.Normal
                 )
@@ -159,16 +176,10 @@ fun Modifier.clickableNoRipple(onClick: () -> Unit): Modifier = this.then(
     )
 )
 
-/** 全屏页左上角玻璃关闭按钮 */
+/** 全屏页左上角玻璃关闭按钮（转发到 Base 层 GlassIconButton） */
 @Composable
 fun GlassCloseButton(onDismiss: () -> Unit, modifier: Modifier = Modifier) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier
-            .size(40.dp)
-            .liquidGlass(CircleShape, alpha = 0.6f, elevation = 3.dp)
-            .clickableNoRipple(onDismiss)
-    ) {
+    GlassIconButton(onClick = onDismiss, modifier = modifier) {
         Icon(
             Icons.Filled.Close,
             contentDescription = "关闭",

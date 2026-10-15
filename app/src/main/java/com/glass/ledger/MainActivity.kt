@@ -9,10 +9,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,13 +26,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.glass.ledger.ui.MainViewModel
+import com.glass.ledger.ui.base.GlassBrandButton
+import com.glass.ledger.ui.base.GlassTokens
 import com.glass.ledger.ui.components.GlassBackdrop
 import com.glass.ledger.ui.components.GlassBottomBar
 import com.glass.ledger.ui.components.Tab
@@ -93,19 +89,14 @@ fun GlassLedgerRoot(vm: MainViewModel = viewModel(factory = MainViewModel.Factor
             exit = fadeOut() + scaleOut(targetScale = 0.6f),
             modifier = Modifier.align(Alignment.BottomEnd)
         ) {
-            Box(
-                contentAlignment = Alignment.Center,
+            GlassBrandButton(
+                onClick = { showAddRecord = true },
                 modifier = Modifier
                     .navigationBarsPadding()
                     .padding(end = 24.dp, bottom = 96.dp)
-                    .size(60.dp)
-                    .shadow(12.dp, fabShape)
-                    .background(Brush.linearGradient(listOf(Color(0xFF6C7CFF), Color(0xFF5B6EF5))), fabShape)
-                    .border(1.2.dp, Color.White.copy(alpha = 0.7f), fabShape)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) { showAddRecord = true }
+                    .size(60.dp),
+                shape = fabShape,
+                elevation = GlassTokens.Elevation.Section
             ) {
                 Icon(Icons.Filled.Add, contentDescription = "记一笔", tint = Color.White, modifier = Modifier.size(30.dp))
             }

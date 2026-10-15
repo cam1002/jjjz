@@ -131,7 +131,7 @@ fun StatsScreen(vm: MainViewModel, contentPadding: PaddingValues) {
                         Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(20.dp))
-                            .background(Color.White.copy(alpha = 0.45f))
+                            .background(Color.White.copy(alpha = 0.72f))
                             .padding(horizontal = 14.dp, vertical = 12.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
