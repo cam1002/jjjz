@@ -5,8 +5,11 @@ import com.glass.ledger.R
 /** 账户图标目录：iconId -> 内置矢量资源。支持自定义选择，按账户类型过滤。 */
 object IconCatalog {
 
-    /** 特殊图标 id：无内置图时使用，渲染为账户底色 + 账户名首字 */
+    /** 特殊图标 id：无内置图时使用，渲染为默认底色块 + 账户名首字 */
     const val OTHER_ID = "other"
+
+    /** 「其他」图标的兜底底色（品牌蓝紫），也是目录查不到 id 时的回退值 */
+    const val DEFAULT_COLOR: Int = 0xFF5B6EF5.toInt()
 
     data class AccountIcon(
         val id: String,
@@ -62,10 +65,12 @@ object IconCatalog {
 
     fun labelOf(id: String): String = (byId[id] ?: byId["card"])!!.label
 
-    /** 自定义账户可选底色 */
-    val palette: List<Int> = listOf(
-        0xFF5B6EF5.toInt(), 0xFF2AAE67.toInt(), 0xFF1677FF.toInt(),
-        0xFFC01E1E.toInt(), 0xFFF5A623.toInt(), 0xFF7B61FF.toInt(),
-        0xFFEC407A.toInt(), 0xFF00B4D8.toInt(), 0xFF78909C.toInt()
-    )
+    /**
+     * 图标自带的品牌色：账户底色不再让用户手选，一律跟随图标
+     * （工商银行=红、微信=绿…）；「其他」或未知 id 回落到 [DEFAULT_COLOR]。
+     */
+    fun colorOf(id: String): Int = byId[id]?.defaultColor ?: DEFAULT_COLOR
+
+    /** 该图标对应的默认账户名（选中图标时自动填进「账户名称」） */
+    fun nameOf(id: String): String? = byId[id]?.label
 }

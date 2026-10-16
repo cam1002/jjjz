@@ -1,5 +1,8 @@
 package com.glass.ledger.ui.screens
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -135,7 +138,11 @@ fun LedgerScreen(vm: MainViewModel, contentPadding: PaddingValues) {
                         }
                     }
                     items(group.records, key = { it.record.id }) { rv ->
-                        RecordRow(rv, onLongPress = { deleting = rv.record })
+                        RecordRow(
+                            rv,
+                            onClick = { vm.openRecordDetail(rv.record.id) },
+                            onLongPress = { deleting = rv.record }
+                        )
                     }
                 }
             }
@@ -198,9 +205,12 @@ private fun SummaryItem(label: String, value: Double, color: Color, modifier: Mo
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun RecordRow(rv: RecordView, onLongPress: () -> Unit) {
-    val isExpense = rv.record.type == RecordType.EXPENSE
+private fun RecordRow(rv: RecordView, onClick: () -> Unit, onLongPress: () -> Unit) {
+    val r = rv.record
+    val isExpense = r.type == RecordType.EXPENSE
+    val interactionSource = remember { MutableInteractionSource() }
     Row(
         Modifier
             .fillMaxWidth()
@@ -209,7 +219,12 @@ private fun RecordRow(rv: RecordView, onLongPress: () -> Unit) {
                 alpha = GlassTokens.Surface.Card,
                 elevation = GlassTokens.Elevation.Card
             )
-            .clickableNoRipple(onLongPress)
+            .combinedClickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+                onLongClick = onLongPress
+            )
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -217,20 +232,31 @@ private fun RecordRow(rv: RecordView, onLongPress: () -> Unit) {
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(rv.categoryName, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = InkPrimary)
-            val timeStr = if (rv.record.timeOfDay > 0)
-                "%02d:%02d".format(rv.record.timeOfDay / 3600, (rv.record.timeOfDay % 3600) / 60)
+            val timeStr = if (r.timeOfDay > 0)
+                "%02d:%02d".format(r.timeOfDay / 3600, (r.timeOfDay % 3600) / 60)
             else ""
-            val sub = listOf(rv.record.note, timeStr).filter { it.isNotBlank() }.joinToString(" · ")
-            if (sub.isNotBlank()) {
-                Text(sub, fontSize = 12.sp, color = InkSecondary, maxLines = 1)
+            val parts = listOf(
+                r.note,
+                timeStr,
+                if (r.refunded) "已退款" else ""
+            ).filter { it.isNotBlank() }
+            if (parts.isNotEmpty()) {
+                Text(
+                    parts.joinToString(" · "),
+                    fontSize = 12.sp,
+                    color = if (r.refunded) ExpenseRed.copy(alpha = 0.85f) else InkSecondary,
+                    maxLines = 1
+                )
             }
         }
         Column(horizontalAlignment = Alignment.End) {
             Text(
-                (if (isExpense) "-" else "+") + rv.record.amount.money(),
+                (if (isExpense) "-" else "+") + r.amount.money(),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = if (isExpense) ExpenseRed else IncomeGreen
+                // 已退款的这笔不再计入统计，金额淡化显示避免和上方合计对不上
+                color = if (r.refunded) InkSecondary.copy(alpha = 0.6f)
+                else if (isExpense) ExpenseRed else IncomeGreen
             )
             Row(
                 verticalAlignment = Alignment.CenterVertically,

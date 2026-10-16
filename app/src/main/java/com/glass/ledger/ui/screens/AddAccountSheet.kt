@@ -1,7 +1,5 @@
 package com.glass.ledger.ui.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,9 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
@@ -25,8 +21,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -50,7 +44,10 @@ import com.glass.ledger.ui.theme.InkSecondary
  * 新增账户第二步（全屏页）：开户表单（类型已在上一步选定）。
  *
  * 外壳全部来自 Base 层：GlassPageDialog 负责 Dialog + 系统栏 + 背景 + 顶栏 + 滚动，
- * 这里只写业务内容（图标选择 -> 底色 -> 输入卡 -> 保存）。
+ * 这里只写业务内容（图标选择 -> 输入卡 -> 保存）。
+ * 两点约定：
+ * 1）账户底色不再开放给用户挑，一律取图标的品牌色（[IconCatalog.colorOf]）；
+ * 2）名称还没被手动改过时，选中图标就把图标名自动填进去（工商银行 -> 工商银行）。
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -59,9 +56,12 @@ fun AddAccountSheet(
     type: AccountType,
     onDismiss: () -> Unit
 ) {
-    var name by remember { mutableStateOf("") }
     var iconId by remember { mutableStateOf(defaultIconOf(type)) }
-    var color by remember { mutableStateOf(IconCatalog.palette.first()) }
+    /** 名称是否被手动编辑过（清空输入框算"没编辑过"，选图标会重新自动填） */
+    var nameEdited by remember { mutableStateOf(false) }
+    var name by remember { mutableStateOf(IconCatalog.nameOf(defaultIconOf(type)).orEmpty()) }
+    // 底色跟随图标品牌色，「其他」回落到默认蓝紫
+    val color = IconCatalog.colorOf(iconId)
     var balanceText by remember { mutableStateOf("") }
     var limitText by remember { mutableStateOf("") }
 
@@ -101,6 +101,12 @@ fun AddAccountSheet(
             fontWeight = FontWeight.SemiBold,
             color = InkPrimary
         )
+        Text(
+            "选图标会自动填好账户名称，底色也跟着图标走",
+            fontSize = GlassTokens.Type.Caption.sp,
+            color = InkSecondary,
+            modifier = Modifier.padding(top = 3.dp)
+        )
         Spacer(Modifier.height(GlassTokens.Space.Row))
         FlowRow(
             Modifier.fillMaxWidth(),
@@ -121,7 +127,10 @@ fun AddAccountSheet(
                                 )
                             } else Modifier
                         )
-                        .clickableNoRipple { iconId = icon.id }
+                        .clickableNoRipple {
+                            iconId = icon.id
+                            if (!nameEdited) name = icon.label
+                        }
                         .padding(6.dp)
                 ) {
                     AccountIcon(icon.id, size = 36.dp)
@@ -134,7 +143,7 @@ fun AddAccountSheet(
                     )
                 }
             }
-            // 固定末位：其他（底色块 + 账户名首字）
+            // 固定末位：其他（底色块 + 账户名首字），选中时清空自动填入的名称
             val selOther = iconId == IconCatalog.OTHER_ID
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -148,7 +157,10 @@ fun AddAccountSheet(
                             )
                         } else Modifier
                     )
-                    .clickableNoRipple { iconId = IconCatalog.OTHER_ID }
+                    .clickableNoRipple {
+                        iconId = IconCatalog.OTHER_ID
+                        if (!nameEdited) name = ""
+                    }
                     .padding(6.dp)
             ) {
                 AccountIcon(
@@ -169,25 +181,6 @@ fun AddAccountSheet(
 
         Spacer(Modifier.height(18.dp))
 
-        // ---- 自定义底色 ----
-        Text("自定义底色", fontSize = GlassTokens.Type.SectionHeader.sp, fontWeight = FontWeight.SemiBold, color = InkPrimary)
-        Spacer(Modifier.height(GlassTokens.Space.Row))
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            IconCatalog.palette.forEach { c ->
-                val sel = c == color
-                Box(
-                    Modifier
-                        .size(if (sel) 30.dp else 26.dp)
-                        .clip(CircleShape)
-                        .background(Color(c))
-                        .border(if (sel) 2.dp else 0.dp, Color.White.copy(alpha = 0.9f), CircleShape)
-                        .clickableNoRipple { color = c }
-                )
-            }
-        }
-
-        Spacer(Modifier.height(18.dp))
-
         // ---- 输入框集中一块（图标下方，同一张玻璃卡） ----
         Column(
             Modifier
@@ -199,7 +192,16 @@ fun AddAccountSheet(
                 )
                 .padding(horizontal = 16.dp)
         ) {
-            GroupedField("账户名称", value = name, hint = nameHintOf(type)) { name = it }
+            GroupedField(
+                label = "账户名称",
+                value = name,
+                hint = nameHintOf(type),
+                onValueChange = {
+                    name = it
+                    // 手动改过就不再自动填；把输入框清空算回到"未编辑"状态
+                    nameEdited = it.isNotBlank()
+                }
+            )
 
             when (type) {
                 AccountType.CREDIT -> {

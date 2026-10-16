@@ -63,15 +63,16 @@ interface RecordDao {
     )
     fun observeBetween(start: Long, end: Long): Flow<List<RecordEntity>>
 
-    @Query("SELECT COALESCE(SUM(amount), 0) FROM records WHERE type = 'EXPENSE' AND dateEpochDay BETWEEN :start AND :end")
+    /** 已退款（refunded = 1）的流水不计入统计：它的金额已经回补进账户余额 */
+    @Query("SELECT COALESCE(SUM(amount), 0) FROM records WHERE type = 'EXPENSE' AND refunded = 0 AND dateEpochDay BETWEEN :start AND :end")
     fun observeExpenseTotal(start: Long, end: Long): Flow<Double>
 
-    @Query("SELECT COALESCE(SUM(amount), 0) FROM records WHERE type = 'INCOME' AND dateEpochDay BETWEEN :start AND :end")
+    @Query("SELECT COALESCE(SUM(amount), 0) FROM records WHERE type = 'INCOME' AND refunded = 0 AND dateEpochDay BETWEEN :start AND :end")
     fun observeIncomeTotal(start: Long, end: Long): Flow<Double>
 
     @Query(
         "SELECT categoryId, SUM(amount) AS total FROM records " +
-            "WHERE type = 'EXPENSE' AND dateEpochDay BETWEEN :start AND :end " +
+            "WHERE type = 'EXPENSE' AND refunded = 0 AND dateEpochDay BETWEEN :start AND :end " +
             "GROUP BY categoryId ORDER BY total DESC"
     )
     fun observeExpenseByCategory(start: Long, end: Long): Flow<List<CategorySum>>
@@ -79,7 +80,12 @@ interface RecordDao {
     @Query("SELECT * FROM records WHERE accountId = :accountId")
     suspend fun getByAccount(accountId: Long): List<RecordEntity>
 
-    @Query("SELECT * FROM records WHERE accountId = :accountId ORDER BY dateEpochDay ASC, id ASC")
+    /** 账单详情页：观察单条流水，编辑/退款/删除后界面自动刷新 */
+    @Query("SELECT * FROM records WHERE id = :id")
+    fun observeById(id: Long): Flow<RecordEntity?>
+
+    /** 账户详情聚合用：同样排除已退款流水，保证月末余额推导与实际余额一致 */
+    @Query("SELECT * FROM records WHERE accountId = :accountId AND refunded = 0 ORDER BY dateEpochDay ASC, id ASC")
     fun observeByAccount(accountId: Long): Flow<List<RecordEntity>>
 
     @Insert

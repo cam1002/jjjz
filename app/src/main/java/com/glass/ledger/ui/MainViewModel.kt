@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.glass.ledger.GlassLedgerApp
 import com.glass.ledger.data.AccountEntity
 import com.glass.ledger.data.AccountType
+import com.glass.ledger.data.CategoryEntity
 import com.glass.ledger.data.LedgerRepository
 import com.glass.ledger.data.RecordEntity
 import com.glass.ledger.data.RecordType
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -100,25 +102,16 @@ class MainViewModel(private val repo: LedgerRepository) : ViewModel() {
                 val accMap = accounts.associateBy { it.id }
                 val catMap = cats.associateBy { it.id }
                 records
-                    .map { r ->
-                        val a = accMap[r.accountId]
-                        val c = catMap[r.categoryId]
-                        RecordView(
-                            record = r,
-                            categoryName = c?.name ?: "未知",
-                            categoryIconKey = c?.iconKey ?: "more",
-                            categoryColor = c?.colorArgb ?: 0xFF78909C.toInt(),
-                            accountName = a?.name ?: "已删除账户",
-                            accountIconId = a?.iconId ?: "card",
-                            accountColor = a?.colorArgb ?: 0xFF5B6EF5.toInt()
-                        )
-                    }
+                    .map { r -> r.toView(accMap, catMap) }
                     .groupBy { LocalDate.ofEpochDay(it.record.dateEpochDay) }
                     .toSortedMap(compareByDescending { it })
                     .map { (date, list) ->
                         DayGroup(
                             date = date,
-                            expense = list.filter { it.record.type == RecordType.EXPENSE }.sumOf { it.record.amount },
+                            // 已退款的不计入当日合计（与月概览口径一致）
+                            expense = list
+                                .filter { it.record.type == RecordType.EXPENSE && !it.record.refunded }
+                                .sumOf { it.record.amount },
                             records = list
                         )
                     }
@@ -250,6 +243,61 @@ class MainViewModel(private val repo: LedgerRepository) : ViewModel() {
 
     fun deleteRecord(record: RecordEntity) = viewModelScope.launch { repo.deleteRecord(record) }
 
+    fun updateRecord(old: RecordEntity, new: RecordEntity) = viewModelScope.launch {
+        repo.updateRecord(old, new)
+    }
+
+    /** 退款：标记该笔已退款并把金额回补到它的账户（统计同步剔除） */
+    fun refundRecord(record: RecordEntity) = viewModelScope.launch { repo.refundRecord(record) }
+
+    /** 详情页「修改」：余额按新旧账户/金额自动重放 */
+    fun saveRecordEdit(
+        old: RecordEntity,
+        type: RecordType,
+        amount: Double,
+        categoryId: Long,
+        accountId: Long,
+        dateTime: java.time.LocalDateTime,
+        note: String
+    ) = viewModelScope.launch {
+        repo.updateRecord(
+            old,
+            old.copy(
+                type = type,
+                amount = amount,
+                categoryId = categoryId,
+                accountId = accountId,
+                note = note,
+                dateEpochDay = dateTime.toLocalDate().toEpochDay(),
+                timeOfDay = dateTime.hour * 3600 + dateTime.minute * 60
+            )
+        )
+    }
+
+    // ---------- 账单详情（收据页） ----------
+    private val detailRecordId = MutableStateFlow<Long?>(null)
+
+    fun openRecordDetail(id: Long) { detailRecordId.value = id }
+    fun closeRecordDetail() { detailRecordId.value = null }
+
+    /**
+     * 详情页数据：直接观察这一条流水，所以修改 / 退款 / 在别处删除都会让界面自动刷新，
+     * 记录被删掉时流出发 null，界面随之关闭。
+     */
+    val recordDetail: StateFlow<RecordView?> = detailRecordId
+        .flatMapLatest { id ->
+            if (id == null) flowOf(null)
+            else combine(
+                repo.observeRecord(id),
+                repo.observeAccounts(),
+                combine(repo.observeExpenseCategories(), repo.observeIncomeCategories()) { a, b -> a + b }
+            ) { record, accounts, cats ->
+                if (record == null) null
+                else record.toView(accounts.associateBy { it.id }, cats.associateBy { it.id })
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
     fun addAccount(
         name: String,
         iconId: String,
@@ -275,3 +323,21 @@ class MainViewModel(private val repo: LedgerRepository) : ViewModel() {
 
 /** 饼图切片颜色兜底：按类别色，缺失时用主色循环 */
 val FALLBACK_COLORS = listOf(ExpenseRed, IncomeGreen, androidx.compose.ui.graphics.Color(0xFF5B6EF5))
+
+/** 流水 + 冗余的分类/账户信息 -> UI 视图模型（列表页与详情页共用） */
+private fun RecordEntity.toView(
+    accMap: Map<Long, AccountEntity>,
+    catMap: Map<Long, CategoryEntity>
+): RecordView {
+    val a = accMap[accountId]
+    val c = catMap[categoryId]
+    return RecordView(
+        record = this,
+        categoryName = c?.name ?: "未知",
+        categoryIconKey = c?.iconKey ?: "more",
+        categoryColor = c?.colorArgb ?: 0xFF78909C.toInt(),
+        accountName = a?.name ?: "已删除账户",
+        accountIconId = a?.iconId ?: "card",
+        accountColor = a?.colorArgb ?: 0xFF5B6EF5.toInt()
+    )
+}

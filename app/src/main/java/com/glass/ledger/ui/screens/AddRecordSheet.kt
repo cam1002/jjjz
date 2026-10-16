@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.glass.ledger.data.RecordType
+import com.glass.ledger.data.RecordView
 import com.glass.ledger.ui.MainViewModel
 import com.glass.ledger.ui.base.GlassPageDialog
 import com.glass.ledger.ui.base.GlassPrimaryButton
@@ -42,29 +43,48 @@ import com.glass.ledger.ui.theme.InkSecondary
 /**
  * 记一笔（全屏页）：支出/收入切换、金额、分类、账户（支出账户可选）、日期、备注。
  * presetAccountId 非 0 时预选该账户（从账户详情页进入）。
+ * editing 非空时是"修改这笔"：全部字段回填，保存走 [MainViewModel.saveRecordEdit]（余额按新旧值重放）。
  *
  * 骨架、顶栏、状态栏、主按钮全部来自 Base 层（GlassPageDialog / GlassPrimaryButton / GlassTokens）。
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun AddRecordSheet(vm: MainViewModel, presetAccountId: Long = 0L, onDismiss: () -> Unit) {
+fun AddRecordSheet(
+    vm: MainViewModel,
+    presetAccountId: Long = 0L,
+    editing: RecordView? = null,
+    onDismiss: () -> Unit
+) {
     val accounts = vm.accounts.collectAsStateWithLifecycle().value
     val expenseCats = vm.expenseCategories.collectAsStateWithLifecycle().value
     val incomeCats = vm.incomeCategories.collectAsStateWithLifecycle().value
 
-    var type by remember { mutableStateOf(RecordType.EXPENSE) }
-    var amountText by remember { mutableStateOf("") }
-    var categoryId by remember { mutableStateOf(0L) }
-    var accountId by remember { mutableStateOf(presetAccountId) }
-    var dateTime by remember { mutableStateOf(java.time.LocalDateTime.now()) }
-    var note by remember { mutableStateOf("") }
+    val origin = editing?.record
+    var type by remember { mutableStateOf(origin?.type ?: RecordType.EXPENSE) }
+    var amountText by remember { mutableStateOf(origin?.amount?.let(::amountToText) ?: "") }
+    var categoryId by remember { mutableStateOf(origin?.categoryId ?: 0L) }
+    var accountId by remember { mutableStateOf(origin?.accountId ?: presetAccountId) }
+    var dateTime by remember {
+        mutableStateOf(
+            origin?.let {
+                java.time.LocalDate.ofEpochDay(it.dateEpochDay)
+                    .atStartOfDay()
+                    .plusSeconds(it.timeOfDay.toLong())
+            } ?: java.time.LocalDateTime.now()
+        )
+    }
+    var note by remember { mutableStateOf(origin?.note ?: "") }
     var showPicker by remember { mutableStateOf(false) }
 
     val cats = if (type == RecordType.EXPENSE) expenseCats else incomeCats
     val amount = amountText.toDoubleOrNull() ?: 0.0
     val canSave = amount > 0 && categoryId != 0L && accountId != 0L
 
-    GlassPageDialog(onDismiss = onDismiss, title = "记一笔") {
+    GlassPageDialog(
+        onDismiss = onDismiss,
+        title = if (editing == null) "记一笔" else "编辑记录",
+        subtitle = editing?.let { "修改后账户余额会自动重算" }
+    ) {
         // ---- 支出 / 收入 ----
         Row(
             Modifier
@@ -240,7 +260,11 @@ fun AddRecordSheet(vm: MainViewModel, presetAccountId: Long = 0L, onDismiss: () 
             text = "保存",
             enabled = canSave,
             onClick = {
-                vm.addRecord(type, amount, categoryId, accountId, dateTime, note.trim())
+                if (editing != null) {
+                    vm.saveRecordEdit(editing.record, type, amount, categoryId, accountId, dateTime, note.trim())
+                } else {
+                    vm.addRecord(type, amount, categoryId, accountId, dateTime, note.trim())
+                }
                 onDismiss()
             }
         )
@@ -258,6 +282,10 @@ fun AddRecordSheet(vm: MainViewModel, presetAccountId: Long = 0L, onDismiss: () 
         )
     }
 }
+
+/** 金额 -> 输入框初值：整数不带小数点（219 而不是 219.0） */
+private fun amountToText(v: Double): String =
+    if (v % 1.0 == 0.0) v.toLong().toString() else v.toString()
 
 /** 区块小标题（统一走 Base 层字号/字重） */
 @Composable

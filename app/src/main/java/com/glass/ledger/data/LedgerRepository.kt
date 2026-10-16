@@ -1,5 +1,6 @@
 package com.glass.ledger.data
 
+import androidx.room.withTransaction
 import com.glass.ledger.data.local.AppDatabase
 import kotlinx.coroutines.flow.Flow
 
@@ -75,6 +76,9 @@ class LedgerRepository(private val db: AppDatabase) {
     fun observeRecordsByAccount(accountId: Long): Flow<List<RecordEntity>> =
         recordDao.observeByAccount(accountId)
 
+    /** 单条流水（账单详情页用；被删除后流出发 null） */
+    fun observeRecord(id: Long): Flow<RecordEntity?> = recordDao.observeById(id)
+
     /** 记一笔并同步账户余额 */
     suspend fun addRecord(record: RecordEntity) {
         val id = recordDao.insert(record)
@@ -92,7 +96,26 @@ class LedgerRepository(private val db: AppDatabase) {
         applyBalance(new, delta = 1)
     }
 
+    /**
+     * 退款：给这笔流水打上「已退款」标记，并把金额原路回补到它的账户
+     * （支出退回、收入扣回）。同一步里做两件事，用事务保证不会只成功一半。
+     *
+     * 标记后这条流水不再计入统计聚合（月概览 / 饼图 / 账户详情月度流入流出），
+     * 因为钱已经回到余额里了，再算一次支出就会和余额对不上。
+     */
+    suspend fun refundRecord(record: RecordEntity) {
+        if (record.refunded) return
+        db.withTransaction {
+            val back = if (record.type == RecordType.EXPENSE) record.amount else -record.amount
+            accountDao.adjustBalance(record.accountId, back)
+            recordDao.update(record.copy(refunded = true))
+        }
+    }
+
     private suspend fun applyBalance(record: RecordEntity, delta: Int) {
+        // 已退款的流水：当初的 ±金额已经被 refundRecord 回补过，净额为 0。
+        // 所以修改或删除它都不再动余额，否则会把退款的那笔钱重复算一遍。
+        if (record.refunded) return
         val signed = when (record.type) {
             RecordType.EXPENSE -> -record.amount
             RecordType.INCOME -> record.amount

@@ -1,5 +1,6 @@
 package com.glass.ledger.data
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -64,7 +65,17 @@ data class RecordEntity(
     /** LocalDate.toEpochDay() */
     val dateEpochDay: Long,
     /** 当日秒数（时/分），LocalDateTime 的时间部分，0 = 00:00 */
-    val timeOfDay: Int = 0
+    val timeOfDay: Int = 0,
+    /**
+     * 是否已退款。true 表示这笔流水已经回补到账户余额，
+     * 因此所有统计聚合（月概览、饼图、账户详情月度流水）都会排除它，
+     * 只有账单列表和详情页还能看到它。
+     *
+     * defaultValue 必须写：v2 -> v3 迁移用的是 ALTER TABLE ... DEFAULT 0，
+     * Room 校验迁移时会比对列默认值，不声明就会报 "Migration didn't properly handle"。
+     */
+    @ColumnInfo(defaultValue = "0")
+    val refunded: Boolean = false
 )
 
 /** 分类聚合结果（饼图数据） */

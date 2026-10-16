@@ -1,5 +1,6 @@
 package com.glass.ledger.ui
 
+import androidx.compose.ui.graphics.Color
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -7,6 +8,19 @@ import java.util.Locale
 
 /** 金额格式化：1,234.56 */
 fun Double.money(): String = String.format(Locale.US, "%,.2f", this)
+
+/**
+ * 收据式金额：整数就不带小数（-219），有小数才保留两位（-219.50）。
+ * 账单详情页用，列表/概览仍用 [money]。
+ */
+fun Double.moneyShort(): String =
+    if (this % 1.0 == 0.0) String.format(Locale.US, "%,.0f", this) else money()
+
+/** 向白色方向混合，用于卡片渐变亮端、分类色淡化 */
+fun Color.blendTowardsWhite(t: Float): Color {
+    fun mix(c: Float, w: Float) = c + (w - c) * t
+    return Color(mix(red, 1f), mix(green, 1f), mix(blue, 1f), alpha)
+}
 
 fun YearMonth.range(): Pair<Long, Long> =
     atDay(1).toEpochDay() to atEndOfMonth().toEpochDay()

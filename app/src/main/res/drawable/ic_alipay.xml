@@ -1,29 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 支付宝：蓝色立体渐变 + 白色「支」 -->
+<!-- 支付宝：由 Downloads/zhifupingtai-zhifubao.svg 转成 VectorDrawable，
+     圆底盘 + 白色「支」两条 path 的几何与原 SVG 完全一致（只把负号前补了空格，
+     否则 Android 的 PathParser 会把 "421.6-188.2" 当成一个数字解析失败）。
+     原 viewBox 是 1325x1024，但内容其实是 x[240.94,1084.24] y[90.35,933.65] 的正圆，
+     所以 viewport 取 844x844 并用 group 平移把内容对齐到左上角，图标仍是 24dp 方形。
+     底色沿用图标集的立体渐变惯例：以原色 #5A9EF7 为中间值做轻微明暗 + 顶部高光。 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
     android:width="24dp" android:height="24dp"
-    android:viewportWidth="24" android:viewportHeight="24">
-    <path android:pathData="M5,0 L19,0 A5,5 0 0,1 24,5 L24,19 A5,5 0 0,1 19,24 L5,24 A5,5 0 0,1 0,19 L0,5 A5,5 0 0,1 5,0 Z">
-        <aapt:attr name="android:fillColor">
-            <gradient android:type="linear" android:startX="2" android:startY="1" android:endX="22" android:endY="23">
-                <item android:offset="0" android:color="#FF3C93FF"/>
-                <item android:offset="1" android:color="#FF0B56C8"/>
-            </gradient>
-        </aapt:attr>
-    </path>
-    <path android:pathData="M5,0 L19,0 A5,5 0 0,1 24,5 L24,9 C17.5,12.8 6.5,12.8 0,9 L0,5 A5,5 0 0,1 5,0 Z">
-        <aapt:attr name="android:fillColor">
-            <gradient android:type="linear" android:startX="12" android:startY="0" android:endX="12" android:endY="11">
-                <item android:offset="0" android:color="#33FFFFFF"/>
-                <item android:offset="1" android:color="#00FFFFFF"/>
-            </gradient>
-        </aapt:attr>
-    </path>
-    <path android:strokeColor="#FFFFFF" android:strokeWidth="2.2" android:strokeLineCap="round"
-        android:pathData="M12,3.8 V10.6 M6.8,7.2 H17.2"/>
-    <path android:strokeColor="#FFFFFF" android:strokeWidth="2.2" android:strokeLineCap="round"
-        android:pathData="M8.4,12.4 L15.6,19.6 M15.6,12.4 L8.4,19.6"/>
-    <path android:strokeColor="#FFFFFF" android:strokeWidth="1.8" android:strokeLineCap="round"
-        android:pathData="M6.4,15.4 H17.6"/>
+    android:viewportWidth="844" android:viewportHeight="844">
+    <group android:translateX="-240.588" android:translateY="-90">
+        <!-- 蓝色圆底盘 -->
+        <path android:pathData="M240.941176 512c0 233.411765 188.235294 421.647059 421.647059 421.647059s421.647059 -188.235294 421.647059 -421.647059S896 90.352941 662.588235 90.352941 240.941176 278.588235 240.941176 512z">
+            <aapt:attr name="android:fillColor">
+                <gradient android:type="linear"
+                    android:startX="320" android:startY="150" android:endX="1010" android:endY="890">
+                    <item android:offset="0" android:color="#FF7EB8FC"/>
+                    <item android:offset="0.55" android:color="#FF5A9EF7"/>
+                    <item android:offset="1" android:color="#FF2C6FD2"/>
+                </gradient>
+            </aapt:attr>
+        </path>
+        <!-- 顶部高光：让圆盘有厚度，和同批银行图标的质感对齐 -->
+        <path android:pathData="M240.941,512 A421.647,421.647 0 0,1 1084.235,512 C905,650 420,650 240.941,512 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient android:type="linear"
+                    android:startX="662.588" android:startY="90.353" android:endX="662.588" android:endY="610">
+                    <item android:offset="0" android:color="#26FFFFFF"/>
+                    <item android:offset="1" android:color="#00FFFFFF"/>
+                </gradient>
+            </aapt:attr>
+        </path>
+        <!-- 白色「支」 -->
+        <path android:fillColor="#FFFFFFFF" android:pathData="M751.435294 564.705882s15.058824 -21.082353 30.117647 -63.247058c16.564706 -42.164706 18.070588 -66.258824 18.070588 -66.258824l-120.470588 -1.505882v-40.658824l146.070588 -1.505882v-30.117647H677.647059v-66.258824h-72.282353V361.411765H466.823529v30.117647l137.035295 -1.505883v45.176471h-108.42353v24.094118h225.882353c-1.505882 15.058824 -6.023529 28.611765 -10.541176 42.164706 -9.035294 22.588235 -18.070588 43.670588 -18.070589 43.670588s-105.411765 -37.647059 -162.635294 -37.647059c-55.717647 0 -123.482353 22.588235 -131.011764 87.341176 -6.023529 64.752941 31.623529 100.894118 85.835294 112.941177 52.705882 12.047059 102.4 0 146.070588 -21.082353 43.670588 -21.082353 85.835294 -69.270588 85.835294 -69.270588l224.376471 109.929411s13.552941 -21.082353 24.094117 -40.658823c7.529412 -13.552941 13.552941 -28.611765 19.576471 -42.164706l-233.411765 -79.811765zm-231.905882 106.917647c-79.811765 0 -94.870588 -39.152941 -94.870588 -66.258823 0 -27.105882 16.564706 -58.729412 84.329411 -63.247059 66.258824 -4.517647 158.117647 48.188235 158.117647 48.188235s-67.764706 81.317647 -147.57647 81.317647z"/>
+    </group>
 </vector>

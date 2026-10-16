@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -61,16 +62,17 @@ fun GlassBrandButton(
     ) { content() }
 }
 
-/** 40dp 圆形玻璃按钮：顶栏返回/关闭等统一用它 */
+/** 圆形玻璃按钮：顶栏返回/关闭（40dp）、详情页底部操作钮（56dp）统一用它 */
 @Composable
 fun GlassIconButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    size: Dp = 40.dp,
     content: @Composable () -> Unit
 ) {
     Box(
         modifier
-            .size(40.dp)
+            .size(size)
             .liquidGlass(
                 shape = GlassTokens.Corner.Circle,
                 alpha = GlassTokens.Surface.Card,
@@ -143,6 +145,9 @@ fun GlassTopBar(
  *
  * @param scroll true = 内容纵向滚动（普通表单/详情）；
  *               false = 内容自己负责滚动（内部放 LazyColumn 时用，避免无限高测量）。
+ * @param topBand 顶部通栏色带颜色（含状态栏区域）。账单详情页用它铺一层分类色氛围；
+ *                null = 只用默认玻璃底色。色带画在光斑之上、内容之下。
+ * @param topBandHeight 色带高度。
  */
 @Composable
 fun GlassPage(
@@ -154,6 +159,8 @@ fun GlassPage(
     trailing: @Composable () -> Unit = {},
     scroll: Boolean = true,
     horizontalPadding: Dp = GlassTokens.Space.Page,
+    topBand: Color? = null,
+    topBandHeight: Dp = 230.dp,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Box(
@@ -162,6 +169,14 @@ fun GlassPage(
             .background(Brush.verticalGradient(GlassTokens.PageBackground))
     ) {
         GlassBackdrop()
+        if (topBand != null) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(topBandHeight)
+                    .background(topBand)
+            )
+        }
         Column(
             Modifier
                 .fillMaxSize()

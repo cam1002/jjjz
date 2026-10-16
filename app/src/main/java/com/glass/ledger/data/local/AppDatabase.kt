@@ -12,7 +12,7 @@ import com.glass.ledger.data.RecordEntity
 
 @Database(
     entities = [AccountEntity::class, CategoryEntity::class, RecordEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -32,13 +32,20 @@ abstract class AppDatabase : RoomDatabase() {
         private fun build(context: Context): AppDatabase =
             Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, "glass_ledger.db")
                 .addCallback(SeedCallback)
-                .addMigrations(MIGRATION_1_2)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                 .build()
 
         /** v1 -> v2：流水增加 timeOfDay（时分）字段，老数据默认 00:00 */
         private val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE records ADD COLUMN timeOfDay INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
+        /** v2 -> v3：流水增加 refunded（已退款）标记，老数据一律未退款 */
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE records ADD COLUMN refunded INTEGER NOT NULL DEFAULT 0")
             }
         }
 

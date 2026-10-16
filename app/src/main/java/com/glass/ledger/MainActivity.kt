@@ -42,6 +42,7 @@ import com.glass.ledger.ui.screens.AddAccountSheet
 import com.glass.ledger.ui.screens.AddRecordSheet
 import com.glass.ledger.ui.screens.AssetsScreen
 import com.glass.ledger.ui.screens.LedgerScreen
+import com.glass.ledger.ui.screens.RecordDetailScreen
 import com.glass.ledger.ui.screens.StatsScreen
 import com.glass.ledger.ui.theme.GlassLedgerTheme
 
@@ -64,7 +65,9 @@ fun GlassLedgerRoot(vm: MainViewModel = viewModel(factory = MainViewModel.Factor
     var showTypePicker by remember { mutableStateOf(false) }
     var pickedType by remember { mutableStateOf<com.glass.ledger.data.AccountType?>(null) }
     var presetAccountId by remember { mutableStateOf(0L) }
+    var editingRecord by remember { mutableStateOf<com.glass.ledger.data.RecordView?>(null) }
     val detail by vm.accountDetail.collectAsStateWithLifecycle()
+    val recordDetail by vm.recordDetail.collectAsStateWithLifecycle()
 
     Box(Modifier.fillMaxSize()) {
         // 液态玻璃背景光斑
@@ -81,10 +84,10 @@ fun GlassLedgerRoot(vm: MainViewModel = viewModel(factory = MainViewModel.Factor
             Tab.STATS -> StatsScreen(vm, contentPadding = topPadding)
         }
 
-        // 悬浮记账按钮（右下角，底栏之上）：仅在记账页且未打开账户详情时显示
+        // 悬浮记账按钮（右下角，底栏之上）：仅在记账页且没有任何全屏覆盖层时显示
         val fabShape = RoundedCornerShape(22.dp)
         AnimatedVisibility(
-            visible = tab == Tab.LEDGER && detail == null,
+            visible = tab == Tab.LEDGER && detail == null && recordDetail == null,
             enter = fadeIn() + scaleIn(initialScale = 0.6f),
             exit = fadeOut() + scaleOut(targetScale = 0.6f),
             modifier = Modifier.align(Alignment.BottomEnd)
@@ -120,15 +123,31 @@ fun GlassLedgerRoot(vm: MainViewModel = viewModel(factory = MainViewModel.Factor
                 }
             )
         }
+
+        // 账单详情（收据页）：全屏覆盖层（点击记账页某笔流水打开）
+        recordDetail?.let { d ->
+            RecordDetailScreen(
+                vm = vm,
+                d = d,
+                onBack = { vm.closeRecordDetail() },
+                onEdit = {
+                    editingRecord = it
+                    vm.closeRecordDetail()
+                    showAddRecord = true
+                }
+            )
+        }
     }
 
     if (showAddRecord) {
         AddRecordSheet(
             vm,
             presetAccountId = presetAccountId,
+            editing = editingRecord,
             onDismiss = {
                 showAddRecord = false
                 presetAccountId = 0L
+                editingRecord = null
             }
         )
     }

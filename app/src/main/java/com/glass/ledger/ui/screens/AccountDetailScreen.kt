@@ -49,6 +49,7 @@ import com.glass.ledger.ui.components.BalanceLineChart
 import com.glass.ledger.ui.components.GlassCard
 import com.glass.ledger.ui.components.clickableNoRipple
 import com.glass.ledger.ui.components.liquidGlass
+import com.glass.ledger.ui.blendTowardsWhite
 import com.glass.ledger.ui.money
 import com.glass.ledger.ui.theme.ExpenseRed
 import com.glass.ledger.ui.theme.IncomeGreen
@@ -345,12 +346,6 @@ private fun YearArrow(symbol: String, enabled: Boolean, onClick: () -> Unit) {
             color = if (enabled) InkPrimary else InkSecondary.copy(alpha = 0.35f)
         )
     }
-}
-
-/** 向白色方向混合，用于卡片渐变亮端 */
-private fun Color.blendTowardsWhite(t: Float): Color {
-    fun mix(c: Float, w: Float) = c + (w - c) * t
-    return Color(mix(red, 1f), mix(green, 1f), mix(blue, 1f), alpha)
 }
 
 /**
