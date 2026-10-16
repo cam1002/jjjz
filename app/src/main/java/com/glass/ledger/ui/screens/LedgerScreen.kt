@@ -236,8 +236,8 @@ private fun RecordRow(rv: RecordView, onClick: () -> Unit, onLongPress: () -> Un
                 "%02d:%02d".format(r.timeOfDay / 3600, (r.timeOfDay % 3600) / 60)
             else ""
             val parts = listOf(
-                r.note,
                 timeStr,
+                r.note,
                 if (r.refunded) "已退款" else ""
             ).filter { it.isNotBlank() }
             if (parts.isNotEmpty()) {
