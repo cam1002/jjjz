@@ -1,6 +1,7 @@
 package com.glass.ledger.ui.components
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.DirectionsBus
 import androidx.compose.material.icons.filled.Home
@@ -12,7 +13,6 @@ import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material.icons.filled.Theaters
-import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.ui.graphics.vector.ImageVector
 
@@ -30,7 +30,8 @@ object CategoryIcons {
         "gift" -> Icons.Filled.CardGiftcard
         "salary" -> Icons.Filled.Payments
         "bonus" -> Icons.Filled.WorkspacePremium
-        "invest" -> Icons.Filled.TrendingUp
+        // AutoMirrored 版（Icons.Filled.TrendingUp 在 Material Icons 里已废弃）
+        "invest" -> Icons.AutoMirrored.Filled.TrendingUp
         else -> Icons.Filled.MoreHoriz
     }
 }

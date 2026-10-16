@@ -33,6 +33,11 @@ object GlassWindow {
             window.navigationBarColor = AndroidColor.TRANSPARENT
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // 状态栏/导航栏对比度蒙层：Android 15（API 35）把这两个 setter 标了废弃，
+            // 但官方文档明确写了"deprecated but still have an effect on Android 15"，
+            // 也没有给出替代 API —— 不关掉的话透明状态栏上会浮一层系统自算的灰色 scrim，
+            // 直接破坏玻璃质感。所以这里保留调用，只压掉告警。
+            @Suppress("DEPRECATION")
             window.isStatusBarContrastEnforced = false
             window.isNavigationBarContrastEnforced = false
         }
