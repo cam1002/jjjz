@@ -24,13 +24,13 @@ class LedgerRepository(private val db: AppDatabase) {
         colorArgb: Int,
         type: AccountType,
         initialBalance: Double,
-        creditLimit: Double?
+        creditLimit: Double?,
+        note: String = ""
     ) {
         val order = System.currentTimeMillis().toInt()
-        // 信用/债务账户：余额为负数表示欠款
-        val signed = if (type == AccountType.CREDIT || type == AccountType.DEBT) {
-            -initialBalance.coerceAtLeast(0.0)
-        } else initialBalance
+        // 负债类记负数（欠别人的）；债务账户的「借出」记正数（别人欠我的 = 应收 = 资产），
+        // 符号规则统一在 signedBalanceOf 里，修改账户弹窗走的是同一套。
+        val signed = signedBalanceOf(type, iconId, initialBalance)
         accountDao.insert(
             AccountEntity(
                 name = name,
@@ -39,19 +39,26 @@ class LedgerRepository(private val db: AppDatabase) {
                 type = type,
                 balance = signed,
                 creditLimit = creditLimit,
-                sortOrder = order
+                sortOrder = order,
+                note = note.trim()
             )
         )
     }
 
     suspend fun updateAccount(account: AccountEntity) = accountDao.update(account)
 
+    /**
+     * 删除账户：**不连带删流水**，只把这些流水和该账户解绑（accountId 置 0）。
+     * 账单是既成事实，删一个账户不该把历史消费记录一起抹掉；解绑后它们仍照常出现在记账页
+     * 和统计里，账户一栏沿用原来的「已删除账户」。账户自己的余额随账户一起消失，
+     * 不做任何回补（钱本来就不在别的账户里）。
+     * 两步放同一个事务里，避免出现「解绑了但账户还在」的中间状态。
+     */
     suspend fun deleteAccount(account: AccountEntity) {
-        // 级联删除该账户下的流水（本地数据，简单可靠）
-        recordDao.getByAccount(account.id).forEach { r ->
-            recordDao.deleteById(r.id)
+        db.withTransaction {
+            recordDao.detachAccount(account.id)
+            accountDao.delete(account)
         }
-        accountDao.delete(account)
     }
 
     // ---------- 分类 ----------

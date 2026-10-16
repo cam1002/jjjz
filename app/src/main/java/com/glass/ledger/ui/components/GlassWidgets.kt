@@ -24,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -33,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import com.glass.ledger.data.IconCatalog
 import com.glass.ledger.ui.base.GlassIconButton
 import com.glass.ledger.ui.base.GlassTokens
+import com.glass.ledger.ui.blendTowardsWhite
 import com.glass.ledger.ui.theme.InkPrimary
 import com.glass.ledger.ui.theme.InkSecondary
 
@@ -55,7 +57,12 @@ fun GlassCard(
     ) { content() }
 }
 
-/** 账户图标：内置银行/APP 矢量图；iconId = "other" 时渲染底色块 + 账户名首字 */
+/**
+ * 账户图标。三种情况：
+ * 1）目录里有内置矢量（微信、支付宝、四大行…）→ 直接画矢量；
+ * 2）「其他」或只有品牌色、暂时还没有 logo 的银行（resId = 0）→ 立体色块 + 账户名首字；
+ * 3）未知 id → 回落到通用银行卡图标（走分支 1）。
+ */
 @Composable
 fun AccountIcon(
     iconId: String,
@@ -64,9 +71,20 @@ fun AccountIcon(
     name: String = "",
     colorArgb: Int = 0xFF5B6EF5.toInt()
 ) {
-    if (iconId == IconCatalog.OTHER_ID) {
+    val resId = IconCatalog.resOf(iconId)
+    if (iconId == IconCatalog.OTHER_ID || resId == 0) {
+        val base = Color(colorArgb)
         Box(
-            modifier.size(size).clip(RoundedCornerShape(size / 3.2f)).background(Color(colorArgb)),
+            modifier
+                .size(size)
+                .clip(RoundedCornerShape(size / 3.2f))
+                .background(
+                    Brush.linearGradient(listOf(base.blendTowardsWhite(0.24f), base, base.shade(0.78f)))
+                )
+                // 顶部高光，和同批立体渐变图标保持同一质感
+                .background(
+                    Brush.verticalGradient(0f to Color(0x30FFFFFF), 0.55f to Color(0x00FFFFFF))
+                ),
             contentAlignment = Alignment.Center
         ) {
             val letter = name.trim().firstOrNull()?.toString() ?: "其"
@@ -81,12 +99,15 @@ fun AccountIcon(
         }
     } else {
         Image(
-            painter = painterResource(IconCatalog.resOf(iconId)),
+            painter = painterResource(resId),
             contentDescription = IconCatalog.labelOf(iconId),
             modifier = modifier.size(size).clip(RoundedCornerShape(size / 3.2f))
         )
     }
 }
+
+/** 按系数压暗（保留透明度），用于立体底板的暗端 */
+private fun Color.shade(f: Float) = Color(red * f, green * f, blue * f, alpha)
 
 /** 分类图标：圆形浅色底 + 主题色 Material 图标 */
 @Composable

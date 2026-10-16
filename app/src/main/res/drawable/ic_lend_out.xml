@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 农业银行：绿色立体渐变 + 麦叶 -->
+<!--
+  借出（债务账户）：绿色立体底 + 白色钱槽与**向上**箭头。
+  ic_borrow_in 的镜像图：钱槽一模一样，箭头反向，底色换成收入绿 ——
+  借出 = 别人欠我的钱（应收），所以余额记正数、算进资产总额。
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
     android:width="24dp" android:height="24dp"
@@ -7,8 +11,8 @@
     <path android:pathData="M5,0 L19,0 A5,5 0 0,1 24,5 L24,19 A5,5 0 0,1 19,24 L5,24 A5,5 0 0,1 0,19 L0,5 A5,5 0 0,1 5,0 Z">
         <aapt:attr name="android:fillColor">
             <gradient android:type="linear" android:startX="2" android:startY="1" android:endX="22" android:endY="23">
-                <item android:offset="0" android:color="#FF45C471"/>
-                <item android:offset="1" android:color="#FF178A45"/>
+                <item android:offset="0" android:color="#FF6FE0A5"/>
+                <item android:offset="1" android:color="#FF14955A"/>
             </gradient>
         </aapt:attr>
     </path>
@@ -20,8 +24,10 @@
             </gradient>
         </aapt:attr>
     </path>
-    <path android:fillColor="#FFFFFF"
-        android:pathData="M12,4.6 C8.2,7.6 7.4,12 9.2,15.4 C10.2,17.2 11.2,18.2 12,19.4 C12.8,18.2 13.8,17.2 14.8,15.4 C16.6,12 15.8,7.6 12,4.6 Z"/>
-    <path android:strokeColor="#FF178A45" android:strokeWidth="1" android:strokeLineCap="round"
-        android:pathData="M12,8 V17.4 M12,11 L9.7,12.8 M12,11 L14.3,12.8 M12,14.2 L10.1,15.7 M12,14.2 L13.9,15.7"/>
+    <!-- 钱槽（和借入同一只，位置一致） -->
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="1.7" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="#00000000"
+        android:pathData="M4.9,13.6 V19.2 H19.1 V13.6"/>
+    <!-- 向上箭头：钱从槽里出去 -->
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="1.7" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="#00000000"
+        android:pathData="M12,12.2 V4.4 M8.4,8.0 L12,4.4 L15.6,8.0"/>
 </vector>

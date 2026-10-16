@@ -1,6 +1,7 @@
 package com.glass.ledger.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -9,11 +10,16 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,6 +33,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.glass.ledger.data.AccountEntity
+import com.glass.ledger.data.AccountType
+import com.glass.ledger.data.IconCatalog
+import com.glass.ledger.data.NO_ACCOUNT_ICON
+import com.glass.ledger.data.NO_ACCOUNT_ID
 import com.glass.ledger.data.RecordType
 import com.glass.ledger.data.RecordView
 import com.glass.ledger.ui.MainViewModel
@@ -41,7 +52,12 @@ import com.glass.ledger.ui.theme.InkPrimary
 import com.glass.ledger.ui.theme.InkSecondary
 
 /**
- * 记一笔（全屏页）：支出/收入切换、金额、分类、账户（支出账户可选）、日期、备注。
+ * 记一笔（全屏页）：支出/收入切换、账户、金额、分类、日期、备注。
+ *
+ * 账户这一栏按截图做成"一个胶囊 + 抽屉选择器"：切换按钮下面只显示当前账户一个胶囊，
+ * 默认是上次用过的账户（[MainViewModel.lastAccountId]），点它弹 [AccountPickerSheet]。
+ * 备注原来是挤在日期旁边的一个小输入框，现在挪到日期下面单独一行。
+ *
  * presetAccountId 非 0 时预选该账户（从账户详情页进入）。
  * editing 非空时是"修改这笔"：全部字段回填，保存走 [MainViewModel.saveRecordEdit]（余额按新旧值重放）。
  *
@@ -56,6 +72,7 @@ fun AddRecordSheet(
     onDismiss: () -> Unit
 ) {
     val accounts = vm.accounts.collectAsStateWithLifecycle().value
+    val accountsLoaded = vm.accountsLoaded.collectAsStateWithLifecycle().value
     val expenseCats = vm.expenseCategories.collectAsStateWithLifecycle().value
     val incomeCats = vm.incomeCategories.collectAsStateWithLifecycle().value
 
@@ -63,6 +80,7 @@ fun AddRecordSheet(
     var type by remember { mutableStateOf(origin?.type ?: RecordType.EXPENSE) }
     var amountText by remember { mutableStateOf(origin?.amount?.let(::amountToText) ?: "") }
     var categoryId by remember { mutableStateOf(origin?.categoryId ?: 0L) }
+    /** 0 = 还没定下来（账户列表还在加载），此时保存按钮是灰的 */
     var accountId by remember { mutableStateOf(origin?.accountId ?: presetAccountId) }
     var dateTime by remember {
         mutableStateOf(
@@ -74,7 +92,25 @@ fun AddRecordSheet(
         )
     }
     var note by remember { mutableStateOf(origin?.note ?: "") }
-    var showPicker by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showAccountPicker by remember { mutableStateOf(false) }
+    var accountResolved by remember { mutableStateOf(false) }
+
+    // 默认账户要等 Room 把列表读出来才能定：上次那个还在就用上次的，
+    // 被删了就退到第一个，一个账户都没有就只能记到「不计入账户」。
+    // 「不计入账户」是哨兵 id，账户列表里查不到，所以要先认它，否则会被当成失效的账户丢掉。
+    LaunchedEffect(accounts, accountsLoaded, accountResolved) {
+        if (accountResolved || !accountsLoaded) return@LaunchedEffect
+        if (accountId == 0L) {
+            accountId = when {
+                vm.lastAccountId == NO_ACCOUNT_ID -> NO_ACCOUNT_ID
+                accounts.any { it.id == vm.lastAccountId } -> vm.lastAccountId
+                accounts.isNotEmpty() -> accounts.first().id
+                else -> NO_ACCOUNT_ID
+            }
+        }
+        accountResolved = true
+    }
 
     val cats = if (type == RecordType.EXPENSE) expenseCats else incomeCats
     val amount = amountText.toDoubleOrNull() ?: 0.0
@@ -104,6 +140,14 @@ fun AddRecordSheet(
                 type = RecordType.INCOME; categoryId = 0L
             }
         }
+
+        Spacer(Modifier.height(GlassTokens.Space.SectionTop))
+
+        // ---- 当前账户（一个胶囊，点开是选择账户抽屉） ----
+        AccountPill(
+            account = displayAccountOf(accountId, accounts),
+            onClick = { showAccountPicker = true }
+        )
 
         Spacer(Modifier.height(GlassTokens.Space.SectionTop))
 
@@ -176,90 +220,64 @@ fun AddRecordSheet(
         }
 
         Spacer(Modifier.height(GlassTokens.Space.SectionTop))
-        SectionHeader(if (type == RecordType.EXPENSE) "支出账户" else "收入账户")
-        Spacer(Modifier.height(GlassTokens.Space.Row))
-        FlowRow(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            accounts.forEach { a ->
-                val sel = a.id == accountId
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .then(
-                            if (sel) Modifier.liquidGlass(
-                                shape = GlassTokens.Corner.Pill,
-                                alpha = GlassTokens.Surface.Card,
-                                elevation = GlassTokens.Elevation.Chip
-                            ) else Modifier.liquidGlass(
-                                shape = GlassTokens.Corner.Pill,
-                                alpha = GlassTokens.Surface.Ghost,
-                                elevation = GlassTokens.Elevation.Flat,
-                                highlight = false
-                            )
-                        )
-                        .clickableNoRipple { accountId = a.id }
-                        .padding(horizontal = 12.dp, vertical = 7.dp)
-                ) {
-                    AccountIcon(a.iconId, size = 18.dp, name = a.name, colorArgb = a.colorArgb)
-                    Spacer(Modifier.width(6.dp))
-                    Text(a.name, fontSize = 13.sp, color = if (sel) InkPrimary else InkSecondary)
-                }
-            }
-        }
 
-        Spacer(Modifier.height(GlassTokens.Space.SectionTop))
+        // ---- 日期（单独一行，旁边不再放备注输入框） ----
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            // 日期
-            Row(
-                Modifier
-                    .liquidGlass(
-                        shape = GlassTokens.Corner.Pill,
-                        alpha = GlassTokens.Surface.Chip,
-                        elevation = GlassTokens.Elevation.Chip
-                    )
-                    .clickableNoRipple { showPicker = true }
-                    .padding(horizontal = 14.dp, vertical = 9.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("日期", fontSize = 13.sp, color = InkSecondary)
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    "${dateTime.year}年${dateTime.monthValue}月${dateTime.dayOfMonth}日 " +
-                        "%02d:%02d".format(dateTime.hour, dateTime.minute),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = InkPrimary
+            Modifier
+                .liquidGlass(
+                    shape = GlassTokens.Corner.Pill,
+                    alpha = GlassTokens.Surface.Chip,
+                    elevation = GlassTokens.Elevation.Chip
                 )
-            }
-            // 备注
-            BasicTextField(
-                value = note,
-                onValueChange = { it -> note = it.takeIf { s -> s.length <= 30 } ?: note },
-                singleLine = true,
-                textStyle = TextStyle(fontSize = 13.sp, color = InkPrimary),
-                modifier = Modifier
-                    .weight(1f, fill = false)
-                    .liquidGlass(
-                        shape = GlassTokens.Corner.Pill,
-                        alpha = GlassTokens.Surface.Chip,
-                        elevation = GlassTokens.Elevation.Flat,
-                        highlight = false
-                    )
-                    .padding(horizontal = 14.dp, vertical = 11.dp)
+                .clickableNoRipple { showDatePicker = true }
+                .padding(horizontal = 14.dp, vertical = 9.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("日期", fontSize = 13.sp, color = InkSecondary)
+            Spacer(Modifier.width(8.dp))
+            Text(
+                "${dateTime.year}年${dateTime.monthValue}月${dateTime.dayOfMonth}日 " +
+                    "%02d:%02d".format(dateTime.hour, dateTime.minute),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                color = InkPrimary
             )
         }
+
+        Spacer(Modifier.height(GlassTokens.Space.Row))
+
+        // ---- 备注（日期下面一整行） ----
+        BasicTextField(
+            value = note,
+            onValueChange = { input -> note = input.takeIf { it.length <= 30 } ?: note },
+            singleLine = true,
+            textStyle = TextStyle(fontSize = 14.sp, color = InkPrimary),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+            modifier = Modifier
+                .fillMaxWidth()
+                .liquidGlass(
+                    shape = GlassTokens.Corner.Pill,
+                    alpha = GlassTokens.Surface.Chip,
+                    elevation = GlassTokens.Elevation.Flat,
+                    highlight = false
+                )
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            decorationBox = { inner ->
+                Box(Modifier.fillMaxWidth()) {
+                    if (note.isEmpty()) {
+                        Text("添加备注", fontSize = 14.sp, color = InkSecondary.copy(alpha = 0.8f))
+                    }
+                    inner()
+                }
+            }
+        )
 
         Spacer(Modifier.height(24.dp))
         GlassPrimaryButton(
             text = "保存",
             enabled = canSave,
             onClick = {
+                if (accountId != 0L) vm.lastAccountId = accountId
                 if (editing != null) {
                     vm.saveRecordEdit(editing.record, type, amount, categoryId, accountId, dateTime, note.trim())
                 } else {
@@ -271,13 +289,26 @@ fun AddRecordSheet(
         Spacer(Modifier.height(GlassTokens.Space.Bottom))
     }
 
-    if (showPicker) {
+    if (showDatePicker) {
         DateTimeWheelDialog(
             initial = dateTime,
-            onDismiss = { showPicker = false },
+            onDismiss = { showDatePicker = false },
             onConfirm = { picked ->
                 dateTime = picked
-                showPicker = false
+                showDatePicker = false
+            }
+        )
+    }
+
+    if (showAccountPicker) {
+        AccountPickerSheet(
+            accounts = accounts,
+            selectedId = accountId,
+            onDismiss = { showAccountPicker = false },
+            onSelect = { picked ->
+                accountId = picked
+                vm.lastAccountId = picked
+                showAccountPicker = false
             }
         )
     }
@@ -296,6 +327,59 @@ private fun SectionHeader(text: String) {
         fontWeight = FontWeight.SemiBold,
         color = InkPrimary
     )
+}
+
+/**
+ * 当前账户 -> 胶囊上要显示的账户（图标 + 名字）。
+ * 「不计入账户」用哨兵 id 现造一个假账户塞进去，这样胶囊不用为它单独写一套显示逻辑；
+ * id 传 0（还没加载出默认值）时返回 null，胶囊显示「选择账户」。
+ */
+private fun displayAccountOf(accountId: Long, accounts: List<AccountEntity>): AccountEntity? = when {
+    accountId == NO_ACCOUNT_ID -> AccountEntity(
+        id = NO_ACCOUNT_ID,
+        name = "不计入账户",
+        iconId = NO_ACCOUNT_ICON,
+        colorArgb = IconCatalog.colorOf(NO_ACCOUNT_ICON),
+        type = AccountType.FUND,
+        balance = 0.0
+    )
+    else -> accounts.firstOrNull { it.id == accountId }
+}
+
+/** 账户胶囊：图标 + 名称 + 一个小箭头，点它弹「选择账户」抽屉 */
+@Composable
+private fun AccountPill(account: AccountEntity?, onClick: () -> Unit) {
+    Row(
+        Modifier
+            .liquidGlass(
+                shape = GlassTokens.Corner.Pill,
+                alpha = GlassTokens.Surface.Card,
+                elevation = GlassTokens.Elevation.Chip
+            )
+            .clickableNoRipple(onClick)
+            .padding(start = 10.dp, end = 12.dp, top = 7.dp, bottom = 7.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (account == null) {
+            // 账户还在加载：先占个位，避免出现一个空白胶囊
+            Text("选择账户", fontSize = 15.sp, color = InkSecondary)
+        } else {
+            AccountIcon(account.iconId, size = 26.dp, name = account.name, colorArgb = account.colorArgb)
+            Spacer(Modifier.width(8.dp))
+            Text(
+                account.name,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+                color = InkPrimary
+            )
+        }
+        Icon(
+            Icons.Filled.ExpandMore,
+            contentDescription = "选择账户",
+            tint = InkSecondary,
+            modifier = Modifier.size(18.dp)
+        )
+    }
 }
 
 @Composable

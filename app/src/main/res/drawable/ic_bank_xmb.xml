@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 厦门银行（ic_bank_xmb.xml）
+     源文件：iconfont 银行卡图标集 shamenyinhang.svg（viewBox 1325x1024，内容区 x[227.4,1097.8] y[90.4,933.6]）。
+     批量转换规则写在 data/BankCatalog.kt 顶部注释里：官方 path 几何原样保留
+     （只在负号前补空格），品牌色 logo 画成白色放在立体渐变底板上，
+     原图里的白色镂空画成底板色；官方 logo 自带实心方块的整体描白并缩到 62%。 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="100" android:viewportHeight="100">
+    <path android:pathData="M22.0,0 L78.0,0 A22.0,22.0 0 0,1 100.0,22.0 L100.0,78.0 A22.0,22.0 0 0,1 78.0,100.0 L22.0,100.0 A22.0,22.0 0 0,1 0,78.0 L0,22.0 A22.0,22.0 0 0,1 22.0,0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="12" android:startY="4" android:endX="88" android:endY="96">
+                <item android:offset="0" android:color="#FF4286B6"/>
+                <item android:offset="0.55" android:color="#FF005C9C"/>
+                <item android:offset="1" android:color="#FF00406D"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- 顶部高光：和集内其它图标一样的玻璃厚度感 -->
+    <path android:pathData="M22.0,0 L78.0,0 A22.0,22.0 0 0,1 100.0,22.0 L100.0,38.0 C70.0,54.0 30.0,54.0 0,38.0 L0,22.0 A22.0,22.0 0 0,1 22.0,0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="50" android:startY="0" android:endX="50" android:endY="60">
+                <item android:offset="0" android:color="#30FFFFFF"/>
+                <item android:offset="1" android:color="#00FFFFFF"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- logo：原 SVG 的 pathData 原样保留（只在负号前补空格），group 把包围盒等比缩放居中到 74% 的安全框里 -->
+    <group android:scaleX="0.08502" android:scaleY="0.08502" android:translateX="-6.3322" android:translateY="6.4706">
+        <path android:fillColor="#FFFFFFFF" android:pathData="M272.564706 801.129412C216.847059 444.235294 822.211765 221.364706 789.082353 481.882353c-31.623529 -144.564706 -316.235294 30.117647 -301.176471 177.694118 69.270588 39.152941 171.670588 15.058824 259.011765 -79.811765 -100.894118 286.117647 -331.294118 305.694118 -474.352941 221.364706z"/>
+        <path android:fillColor="#FFFFFFFF" android:pathData="M1097.788235 608.376471c-182.211765 118.964706 -483.388235 -93.364706 -367.435294 -158.117647 -33.129412 61.741176 134.023529 135.529412 237.929412 85.835294 1.505882 -43.670588 -69.270588 -75.294118 -150.588235 -85.835294 194.258824 -30.117647 280.094118 70.776471 280.094117 158.117647zM611.388235 90.352941c237.929412 -7.529412 278.588235 271.058824 206.305883 347.858824 24.094118 -115.952941 -93.364706 -194.258824 -141.552942 -192.752941 -12.047059 10.541176 -43.670588 40.658824 -33.129411 100.894117 -97.882353 -34.635294 -126.494118 -191.247059 -31.62353 -256z"/>
+    </group>
+</vector>

@@ -42,6 +42,7 @@ import com.glass.ledger.ui.base.GlassTokens
 import com.glass.ledger.ui.components.AccountIcon
 import com.glass.ledger.ui.components.GlassCard
 import com.glass.ledger.ui.components.GlassConfirmDialog
+import com.glass.ledger.ui.components.SwipeDeleteRow
 import com.glass.ledger.ui.components.clickableNoRipple
 import com.glass.ledger.ui.components.liquidGlass
 import com.glass.ledger.ui.money
@@ -65,6 +66,8 @@ fun AssetsScreen(
     val liabilityTotal = vm.liabilityTotal.collectAsStateWithLifecycle().value
 
     var deleting by remember { mutableStateOf<AccountEntity?>(null) }
+    /** 当前被左滑拉开的那一行的 key：同一时刻只允许一行是拉开的 */
+    var openRow by remember { mutableStateOf<String?>(null) }
 
     Column(
         Modifier
@@ -122,26 +125,36 @@ fun AssetsScreen(
             sections.forEach { type ->
                 val group = accounts.filter { it.type == type }
                 if (group.isNotEmpty()) {
-                    val isLiability = type == AccountType.CREDIT || type == AccountType.DEBT
+                    // 组头的汇总方向：信用账户整组都是欠款，取相反数显示成「还欠多少」；
+                    // 债务账户里借出是正数（别人欠我的）、借入是负数（我欠别人的），
+                    // 两种混在同一组里逐笔相加只能读出净额，所以不再翻符号。
+                    val flipSign = type == AccountType.CREDIT
                     item {
                         SectionRow(
                             title = AccountTypes.label(type),
-                            total = if (isLiability) -group.sumOf { it.balance } else group.sumOf { it.balance }
+                            total = if (flipSign) -group.sumOf { it.balance } else group.sumOf { it.balance }
                         )
                     }
                     items(group, key = { "${type}_${it.id}" }) { acc ->
-                        AccountRow(
-                            acc,
-                            onClick = { vm.openAccountDetail(acc.id) },
-                            onLongPress = { deleting = acc }
-                        )
+                        val rowKey = "${type}_${acc.id}"
+                        SwipeDeleteRow(
+                            opened = openRow == rowKey,
+                            onOpenedChange = { open -> openRow = if (open) rowKey else null },
+                            onDelete = { deleting = acc }
+                        ) {
+                            AccountRow(
+                                acc,
+                                onClick = { vm.openAccountDetail(acc.id) },
+                                onLongPress = { deleting = acc }
+                            )
+                        }
                     }
                 }
             }
 
             item {
                 Text(
-                    "提示：点击账户查看账单统计，长按可删除；数据全部保存在本机。",
+                    "提示：点击账户查看账单统计，左滑（或长按）可删除；数据全部保存在本机。",
                     fontSize = 12.sp,
                     color = InkSecondary.copy(alpha = 0.8f),
                     modifier = Modifier.padding(top = 8.dp)
@@ -153,9 +166,13 @@ fun AssetsScreen(
     deleting?.let { acc ->
         GlassConfirmDialog(
             title = "删除「${acc.name}」？",
-            body = "该账户下的所有流水记录将一并删除。",
+            body = "确定删除当前账户吗？删除后不可恢复。相关账单不再与其关联。",
             onDismiss = { deleting = null },
-            onConfirm = { vm.deleteAccount(acc); deleting = null }
+            onConfirm = {
+                vm.deleteAccount(acc)
+                deleting = null
+                openRow = null
+            }
         )
     }
 }

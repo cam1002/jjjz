@@ -41,6 +41,13 @@ object GlassTokens {
         val Circle: Shape = CircleShape
         /** 弹窗面板 */
         val Dialog: Shape = RoundedCornerShape(28.dp)
+        /** 底部抽屉：只有上面两个角是圆的，底下贴着导航栏 */
+        val BottomSheet: Shape = RoundedCornerShape(
+            topStart = 30.dp,
+            topEnd = 30.dp,
+            bottomStart = 0.dp,
+            bottomEnd = 0.dp
+        )
     }
 
     /** 投影档位 */

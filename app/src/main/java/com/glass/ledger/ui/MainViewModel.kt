@@ -9,7 +9,10 @@ import com.glass.ledger.GlassLedgerApp
 import com.glass.ledger.data.AccountEntity
 import com.glass.ledger.data.AccountType
 import com.glass.ledger.data.CategoryEntity
+import com.glass.ledger.data.IconCatalog
 import com.glass.ledger.data.LedgerRepository
+import com.glass.ledger.data.NO_ACCOUNT_ICON
+import com.glass.ledger.data.NO_ACCOUNT_ID
 import com.glass.ledger.data.RecordEntity
 import com.glass.ledger.data.RecordType
 import com.glass.ledger.data.RecordView
@@ -22,6 +25,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -68,13 +72,31 @@ data class AccountDetailUi(
 )
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-class MainViewModel(private val repo: LedgerRepository) : ViewModel() {
+class MainViewModel(
+    private val repo: LedgerRepository,
+    private val prefs: android.content.SharedPreferences
+) : ViewModel() {
 
     val selectedMonth = MutableStateFlow(YearMonth.now())
     val statsPeriod = MutableStateFlow(StatsPeriod.MONTH)
 
+    /**
+     * 账户列表读到过没有。用来区分"还在加载"和"一个账户都没有"：
+     * 记一笔要靠它决定什么时候该把默认账户定下来，不然空列表的那一帧会被误判成没有账户。
+     */
+    val accountsLoaded = MutableStateFlow(false)
+
     val accounts: StateFlow<List<AccountEntity>> = repo.observeAccounts()
+        .onEach { accountsLoaded.value = true }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /**
+     * 记一笔的默认账户 = 上次选的那个（存 SharedPreferences，杀进程也记得）。
+     * 0 = 还没选过；-1（[NO_ACCOUNT_ID]）= 上次选的是「不计入账户」，这也是个合法记忆。
+     */
+    var lastAccountId: Long
+        get() = prefs.getLong(KEY_LAST_ACCOUNT, 0L)
+        set(value) = prefs.edit().putLong(KEY_LAST_ACCOUNT, value).apply()
 
     /** 资产总额（资金+充值+投资） */
     val assetTotal: StateFlow<Double> = repo.observeAssetTotal()
@@ -304,18 +326,26 @@ class MainViewModel(private val repo: LedgerRepository) : ViewModel() {
         colorArgb: Int,
         type: AccountType,
         initialBalance: Double,
-        creditLimit: Double?
+        creditLimit: Double?,
+        note: String = ""
     ) = viewModelScope.launch {
-        repo.addAccount(name, iconId, colorArgb, type, initialBalance, creditLimit)
+        repo.addAccount(name, iconId, colorArgb, type, initialBalance, creditLimit, note)
     }
 
     fun deleteAccount(account: AccountEntity) = viewModelScope.launch { repo.deleteAccount(account) }
 
     companion object {
+        private const val PREFS_NAME = "glass_ledger_prefs"
+        private const val KEY_LAST_ACCOUNT = "lastAccountId"
+
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as GlassLedgerApp
-                MainViewModel(app.repository)
+                // 首选项而不是数据库表：这只是个界面偏好，不该跟着备份/导出走
+                MainViewModel(
+                    app.repository,
+                    app.getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE)
+                )
             }
         }
     }
@@ -331,13 +361,22 @@ private fun RecordEntity.toView(
 ): RecordView {
     val a = accMap[accountId]
     val c = catMap[categoryId]
+    // 记一笔时选了「不计入账户」的流水：accountId = -1，查不到账户，但显示上必须和
+    // "账户被删了"（accountId = 0）区分开，前者是有意为之，后者是历史遗留。
+    val detached = accountId == NO_ACCOUNT_ID
     return RecordView(
         record = this,
         categoryName = c?.name ?: "未知",
         categoryIconKey = c?.iconKey ?: "more",
         categoryColor = c?.colorArgb ?: 0xFF78909C.toInt(),
-        accountName = a?.name ?: "已删除账户",
-        accountIconId = a?.iconId ?: "card",
-        accountColor = a?.colorArgb ?: 0xFF5B6EF5.toInt()
+        accountName = if (detached) "不计入账户" else a?.name ?: "已删除账户",
+        accountIconId = when {
+            detached -> NO_ACCOUNT_ICON
+            else -> a?.iconId ?: "card"
+        },
+        accountColor = when {
+            detached -> IconCatalog.colorOf(NO_ACCOUNT_ICON)
+            else -> a?.colorArgb ?: 0xFF5B6EF5.toInt()
+        }
     )
 }

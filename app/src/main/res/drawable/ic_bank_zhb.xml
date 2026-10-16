@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 浙商银行（ic_bank_zhb.xml）
+     源文件：iconfont 银行卡图标集 zheshangyinhang.svg（viewBox 1325x1024，内容区 x[240.9,1085.7] y[90.4,933.6]）。
+     批量转换规则写在 data/BankCatalog.kt 顶部注释里：官方 path 几何原样保留
+     （只在负号前补空格），品牌色 logo 画成白色放在立体渐变底板上，
+     原图里的白色镂空画成底板色；官方 logo 自带实心方块的整体描白并缩到 62%。 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="100" android:viewportHeight="100">
+    <path android:pathData="M22.0,0 L78.0,0 A22.0,22.0 0 0,1 100.0,22.0 L100.0,78.0 A22.0,22.0 0 0,1 78.0,100.0 L22.0,100.0 A22.0,22.0 0 0,1 0,78.0 L0,22.0 A22.0,22.0 0 0,1 22.0,0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="12" android:startY="4" android:endX="88" android:endY="96">
+                <item android:offset="0" android:color="#FFCEB54A"/>
+                <item android:offset="0.55" android:color="#FFBD9B0B"/>
+                <item android:offset="1" android:color="#FF846C08"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- 顶部高光：和集内其它图标一样的玻璃厚度感 -->
+    <path android:pathData="M22.0,0 L78.0,0 A22.0,22.0 0 0,1 100.0,22.0 L100.0,38.0 C70.0,54.0 30.0,54.0 0,38.0 L0,22.0 A22.0,22.0 0 0,1 22.0,0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="50" android:startY="0" android:endX="50" android:endY="60">
+                <item android:offset="0" android:color="#30FFFFFF"/>
+                <item android:offset="1" android:color="#00FFFFFF"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- logo：原 SVG 的 pathData 原样保留（只在负号前补空格），group 把包围盒等比缩放居中到 74% 的安全框里 -->
+    <group android:scaleX="0.08759" android:scaleY="0.08759" android:translateX="-8.1052" android:translateY="5.1515">
+        <path android:fillColor="#FFFFFFFF" android:pathData="M617.411765 450.258824L420.141176 260.517647l76.8 -78.305882 197.270589 188.235294 -76.8 79.811765z m18.070588 216.847058l186.729412 177.694118 -73.788236 76.8 -76.8 -73.788235 -79.811764 85.835294L240.941176 600.847059l81.317648 -84.329412 -76.8 -73.788235 73.788235 -76.8 197.270588 188.235294 -72.282353 78.305882 -61.741176 -60.235294 -12.047059 12.047059 240.941176 228.894118 12.047059 -12.047059 -60.235294 -58.729412 72.282353 -75.294118zM707.764706 358.4L508.988235 168.658824l72.282353 -75.294118 76.8 72.282353 73.788236 -75.294118 350.870588 332.8 -73.788236 76.8 76.8 72.282353 -72.282352 76.8 -189.741177 -177.694118 70.776471 -73.788235 60.235294 58.729412 12.047059 -12.047059 -239.435295 -230.4 -12.047058 12.047059 61.741176 60.235294 -69.270588 72.282353zM530.070588 542.117647L331.294118 352.376471l76.8 -79.811765 198.77647 188.235294 -76.8 81.317647zM813.176471 483.388235l186.729411 177.694118 -76.8 79.811765 -186.729411 -179.2 76.8 -78.305883z m-88.847059 91.858824L911.058824 752.941176l-76.8 78.305883 -185.22353 -176.188235 75.294118 -79.811765z"/>
+    </group>
+</vector>

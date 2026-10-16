@@ -16,12 +16,18 @@ interface AccountDao {
     @Query("SELECT * FROM accounts ORDER BY sortOrder ASC, id ASC")
     fun observeAll(): Flow<List<AccountEntity>>
 
-    /** 资产总额 = 资金 + 充值 + 投资 */
-    @Query("SELECT COALESCE(SUM(balance), 0) FROM accounts WHERE type IN ('FUND','RECHARGE','INVEST')")
+    /**
+     * 资产总额 = 资金 + 充值 + 投资 + **负债类里余额为正的那部分**。
+     * 债务账户的「借出」（别人欠我的）存的是正数，那是应收、是资产，不能算负债；
+     * 信用卡偶尔会存出正余额（多还的溢缴款），同理。
+     * 这两个查询的条件互斥且覆盖所有账户，所以
+     * 「资产总额 + 负债总额 = 所有账户余额之和」这条恒等式不会破（净资产页就靠它）。
+     */
+    @Query("SELECT COALESCE(SUM(balance), 0) FROM accounts WHERE type IN ('FUND','RECHARGE','INVEST') OR balance > 0")
     fun observeAssetTotal(): Flow<Double>
 
-    /** 负债总额（负数）= 信用 + 债务 */
-    @Query("SELECT COALESCE(SUM(balance), 0) FROM accounts WHERE type IN ('CREDIT','DEBT')")
+    /** 负债总额（负数）= 信用 + 债务里余额为负的那部分（信用卡欠款、借入） */
+    @Query("SELECT COALESCE(SUM(balance), 0) FROM accounts WHERE type IN ('CREDIT','DEBT') AND balance < 0")
     fun observeLiabilityTotal(): Flow<Double>
 
     @Insert
@@ -77,8 +83,13 @@ interface RecordDao {
     )
     fun observeExpenseByCategory(start: Long, end: Long): Flow<List<CategorySum>>
 
-    @Query("SELECT * FROM records WHERE accountId = :accountId")
-    suspend fun getByAccount(accountId: Long): List<RecordEntity>
+    /**
+     * 删除账户时把该账户下的流水「解绑」：accountId 置 0，流水本身保留。
+     * records 表没有对 accounts 的外键约束，所以 0 这个不存在的 id 是合法值，
+     * UI 侧取不到账户时沿用 MainViewModel.toView 里原来的「已删除账户」兜底名。
+     */
+    @Query("UPDATE records SET accountId = 0 WHERE accountId = :accountId")
+    suspend fun detachAccount(accountId: Long)
 
     /** 账单详情页：观察单条流水，编辑/退款/删除后界面自动刷新 */
     @Query("SELECT * FROM records WHERE id = :id")

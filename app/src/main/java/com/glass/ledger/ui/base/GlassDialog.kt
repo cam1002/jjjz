@@ -102,6 +102,9 @@ fun GlassDialogPanel(
 /**
  * 全屏页式弹窗（Base 层）：新增账户、记一笔这类"占满屏幕的表单页"都用它。
  * 顶栏是关闭钮 + 标题（+ 副标题 / 右侧自定义胶囊），内容自动滚动并处理键盘避让。
+ *
+ * @param onBack 传入后顶栏左侧变成返回箭头（用于同一个弹窗内的二级页，
+ *               比如开户表单里点「储蓄卡」进的选银行列表），此时关闭钮不再出现。
  */
 @Composable
 fun GlassPageDialog(
@@ -110,6 +113,7 @@ fun GlassPageDialog(
     subtitle: String? = null,
     trailing: @Composable () -> Unit = {},
     scroll: Boolean = true,
+    onBack: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Dialog(
@@ -119,11 +123,13 @@ fun GlassPageDialog(
             decorFitsSystemWindows = false
         )
     ) {
-        GlassDialogWindow(dimAmount = 0f)
+        // fillScreen 是这类页面能不能正常显示的关键，原因见 [GlassDialogWindow]
+        GlassDialogWindow(dimAmount = 0f, fillScreen = true)
         GlassPage(
             title = title,
             subtitle = subtitle,
-            onClose = onDismiss,
+            onBack = onBack,
+            onClose = if (onBack == null) onDismiss else null,
             trailing = trailing,
             scroll = scroll
         ) { content() }

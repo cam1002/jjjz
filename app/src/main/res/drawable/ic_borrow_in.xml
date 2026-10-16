@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 建设银行：深蓝立体渐变 + 双层 C 形块 -->
+<!--
+  借入（债务账户）：红色立体底 + 白色钱槽与**向下**箭头。
+  和 ic_lend_out 是一对镜像：同一个钱槽、同一个箭头位置，只有箭头方向相反，
+  红/绿沿用全站"支出红、收入绿"的读法 —— 借入 = 我欠别人的钱，余额记负数。
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
     android:width="24dp" android:height="24dp"
@@ -7,8 +11,8 @@
     <path android:pathData="M5,0 L19,0 A5,5 0 0,1 24,5 L24,19 A5,5 0 0,1 19,24 L5,24 A5,5 0 0,1 0,19 L0,5 A5,5 0 0,1 5,0 Z">
         <aapt:attr name="android:fillColor">
             <gradient android:type="linear" android:startX="2" android:startY="1" android:endX="22" android:endY="23">
-                <item android:offset="0" android:color="#FF3D8BE0"/>
-                <item android:offset="1" android:color="#FF0C4E9F"/>
+                <item android:offset="0" android:color="#FFFF9281"/>
+                <item android:offset="1" android:color="#FFD0352A"/>
             </gradient>
         </aapt:attr>
     </path>
@@ -20,8 +24,10 @@
             </gradient>
         </aapt:attr>
     </path>
-    <path android:strokeColor="#FFFFFF" android:strokeWidth="2.4" android:strokeLineJoin="round"
-        android:pathData="M17,4.5 H8.5 L4,12 L8.5,19.5 H17"/>
-    <path android:strokeColor="#CFE0F5" android:strokeWidth="1.9" android:strokeLineJoin="round"
-        android:pathData="M20.5,8.2 H15.8 L13,12 L15.8,15.8 H20.5"/>
+    <!-- 钱槽（开口朝上） -->
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="1.7" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="#00000000"
+        android:pathData="M4.9,13.6 V19.2 H19.1 V13.6"/>
+    <!-- 向下箭头：钱进到槽里 -->
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="1.7" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="#00000000"
+        android:pathData="M12,3.6 V11.4 M8.4,8.2 L12,11.8 L15.6,8.2"/>
 </vector>

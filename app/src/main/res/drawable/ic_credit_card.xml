@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 信用卡：酒红立体渐变底板 + 白色卡片（正面芯片 + 卡号点 + 姓名线）。
+     和 ic_debit_card（橙·背面磁条 + ¥）刻意分开：一个画卡正面、一个画卡背面，
+     储蓄卡/信用卡两格并排时一眼能认出来。底板选酒红而不是正红，是因为信用账户那四格里
+     白条已经是正红（#E4393C），同屏两格撞色会读成同一个东西。
+     开户表单里信用账户第一格固定是它，点进去选银行后这一格换成对应银行的图标。
+     风格与集内惯例一致：24dp 方图、r=5 圆角底板、斜向渐变（浅→深）+ 顶部白色高光。 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <!-- 底板 -->
+    <path android:pathData="M5,0 L19,0 A5,5 0 0,1 24,5 L24,19 A5,5 0 0,1 19,24 L5,24 A5,5 0 0,1 0,19 L0,5 A5,5 0 0,1 5,0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="2" android:startY="1" android:endX="22" android:endY="23">
+                <item android:offset="0" android:color="#FFD95C7C"/>
+                <item android:offset="1" android:color="#FF8E1B3F"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- 顶部高光 -->
+    <path android:pathData="M5,0 L19,0 A5,5 0 0,1 24,5 L24,9 C17.5,12.8 6.5,12.8 0,9 L0,5 A5,5 0 0,1 5,0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="12" android:startY="0" android:endX="12" android:endY="11">
+                <item android:offset="0" android:color="#33FFFFFF"/>
+                <item android:offset="1" android:color="#00FFFFFF"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- 卡面 -->
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M3,7.5 A2.5,2.5 0 0 1 5.5,5 H18.5 A2.5,2.5 0 0 1 21,7.5 V16.5 A2.5,2.5 0 0 1 18.5,19 H5.5 A2.5,2.5 0 0 1 3,16.5 Z"/>
+    <!-- 芯片（圆角方块） -->
+    <path android:fillColor="#FF8E1B3F"
+        android:pathData="M5.8,11.6 H7.6 A0.8,0.8 0 0,1 8.4,12.4 V13.8 A0.8,0.8 0 0,1 7.6,14.6 H5.8 A0.8,0.8 0 0,1 5,13.8 V12.4 A0.8,0.8 0 0,1 5.8,11.6 Z"/>
+    <!-- 芯片触点：白线是从卡面上「挖」出来的，所以描白色 -->
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="0.55"
+        android:pathData="M6.2,11.6 V14.6 M7.4,11.6 V14.6 M5,13.1 H8.4"/>
+    <!-- 卡号：三组各三个点（r=0.4），比连笔画的假数字更像真实卡面 -->
+    <path android:fillColor="#FF8E1B3F" android:pathData="M10.6,13.1 m-0.4,0 a0.4,0.4 0 1,0 0.8,0 a0.4,0.4 0 1,0 -0.8,0"/>
+    <path android:fillColor="#FF8E1B3F" android:pathData="M11.45,13.1 m-0.4,0 a0.4,0.4 0 1,0 0.8,0 a0.4,0.4 0 1,0 -0.8,0"/>
+    <path android:fillColor="#FF8E1B3F" android:pathData="M12.3,13.1 m-0.4,0 a0.4,0.4 0 1,0 0.8,0 a0.4,0.4 0 1,0 -0.8,0"/>
+    <path android:fillColor="#FF8E1B3F" android:pathData="M14.05,13.1 m-0.4,0 a0.4,0.4 0 1,0 0.8,0 a0.4,0.4 0 1,0 -0.8,0"/>
+    <path android:fillColor="#FF8E1B3F" android:pathData="M14.9,13.1 m-0.4,0 a0.4,0.4 0 1,0 0.8,0 a0.4,0.4 0 1,0 -0.8,0"/>
+    <path android:fillColor="#FF8E1B3F" android:pathData="M15.75,13.1 m-0.4,0 a0.4,0.4 0 1,0 0.8,0 a0.4,0.4 0 1,0 -0.8,0"/>
+    <path android:fillColor="#FF8E1B3F" android:pathData="M17.5,13.1 m-0.4,0 a0.4,0.4 0 1,0 0.8,0 a0.4,0.4 0 1,0 -0.8,0"/>
+    <path android:fillColor="#FF8E1B3F" android:pathData="M18.35,13.1 m-0.4,0 a0.4,0.4 0 1,0 0.8,0 a0.4,0.4 0 1,0 -0.8,0"/>
+    <path android:fillColor="#FF8E1B3F" android:pathData="M19.2,13.1 m-0.4,0 a0.4,0.4 0 1,0 0.8,0 a0.4,0.4 0 1,0 -0.8,0"/>
+    <!-- 姓名线 + 有效期（圆头短线，浅一档的酒红，避免和卡号抢视觉重量） -->
+    <path android:strokeColor="#FFC96A88" android:strokeWidth="1.15" android:strokeLineCap="round"
+        android:pathData="M5,16.9 H11.6 M13.2,16.9 H15.8"/>
+</vector>

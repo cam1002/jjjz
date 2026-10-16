@@ -39,6 +39,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.glass.ledger.data.AccountEntity
 import com.glass.ledger.data.AccountType
 import com.glass.ledger.data.AccountTypes
+import com.glass.ledger.data.isPayableAccount
+import com.glass.ledger.data.signedBalanceOf
 import com.glass.ledger.ui.MainViewModel
 import com.glass.ledger.ui.base.GlassDialogPanel
 import com.glass.ledger.ui.base.GlassPage
@@ -144,6 +146,15 @@ fun AccountDetailScreen(
                             if (acc.type == AccountType.CREDIT && acc.creditLimit != null) {
                                 Text(
                                     "总额度 ${acc.creditLimit.money()} · 可用 ${(acc.creditLimit + acc.balance).money()}",
+                                    fontSize = GlassTokens.Type.Caption.sp,
+                                    color = Color.White.copy(alpha = 0.85f),
+                                    modifier = Modifier.padding(top = 8.dp)
+                                )
+                            }
+                            // 开户时填的备注，没填就不占位
+                            if (acc.note.isNotBlank()) {
+                                Text(
+                                    acc.note,
                                     fontSize = GlassTokens.Type.Caption.sp,
                                     color = Color.White.copy(alpha = 0.85f),
                                     modifier = Modifier.padding(top = 8.dp)
@@ -349,7 +360,12 @@ private fun YearArrow(symbol: String, enabled: Boolean, onClick: () -> Unit) {
 }
 
 /**
- * 修改账户：名称 + 余额（负债类账户输入欠款金额，保存时取负），信用卡还可改额度。
+ * 修改账户：名称 + 余额（负债类账户输入欠款金额，保存时取负），信用卡还可改额度，
+ * 备注和开户表单一样能改（开户时填的备注要能改，不然只能删了重建）。
+ * 正负号一律走 [signedBalanceOf] / [isPayableAccount]，和开户表单同一套规则：
+ * 债务账户里的「借出」是别人欠我的（应收），不翻符号，提示语也单独一档。
+ * 唯一例外是**溢缴款**（欠债类账户余额为正 = 钱还多了），它按资产算，回填和保存都不翻符号，
+ * 否则"打开就保存"会把 +66 悄悄变成 -66。
  */
 @Composable
 private fun EditAccountDialog(
@@ -357,12 +373,29 @@ private fun EditAccountDialog(
     onDismiss: () -> Unit,
     onSave: (AccountEntity) -> Unit
 ) {
-    val isLiability = account.type == AccountType.CREDIT || account.type == AccountType.DEBT
+    val payable = isPayableAccount(account.type, account.iconId)
+    /**
+     * 溢缴款：欠债类账户（信用卡、借入）余额居然是正数 —— 钱还多了，多出来的部分是存在那边的
+     * 资产（资产总额那条 SQL 就是靠 `balance > 0` 把它捞进去的）。
+     * 这种账户不能按"欠款"口径回填再翻符号，否则字段什么都不动、只点一下保存就会把 +66 变成 -66，
+     * 净资产凭空少 132。所以：回填原值、按正数存回去，只让它改大小，不改方向。
+     */
+    val overPaid = payable && account.balance > 0
     var name by remember { mutableStateOf(account.name) }
     var balanceText by remember {
-        mutableStateOf(if (isLiability) abs(account.balance).toString() else account.balance.toString())
+        mutableStateOf(
+            if (payable && !overPaid) abs(account.balance).toString() else account.balance.toString()
+        )
     }
     var limitText by remember { mutableStateOf(account.creditLimit?.toString() ?: "") }
+    var noteText by remember { mutableStateOf(account.note) }
+
+    val balanceHint = when {
+        overPaid -> "溢缴款（元）"
+        account.type == AccountType.DEBT && !payable -> "借出金额（元）"
+        payable -> "欠款金额（元）"
+        else -> "当前余额（元）"
+    }
 
     val canSave = name.isNotBlank() && balanceText.toDoubleOrNull() != null
 
@@ -373,7 +406,7 @@ private fun EditAccountDialog(
         Spacer(Modifier.height(10.dp))
         EditField(
             value = balanceText,
-            hint = if (isLiability) "欠款金额（元）" else "当前余额（元）",
+            hint = balanceHint,
             numeric = true
         ) { balanceText = it }
 
@@ -381,6 +414,9 @@ private fun EditAccountDialog(
             Spacer(Modifier.height(10.dp))
             EditField(value = limitText, hint = "总额度（元）", numeric = true) { limitText = it }
         }
+
+        Spacer(Modifier.height(10.dp))
+        EditField(value = noteText, hint = "备注（可选）") { noteText = it }
 
         Spacer(Modifier.height(20.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -405,11 +441,18 @@ private fun EditAccountDialog(
                 modifier = Modifier.weight(1f),
                 onClick = {
                     val input = balanceText.toDoubleOrNull() ?: 0.0
-                    val newBalance = if (isLiability) -abs(input) else input
+                    // 溢缴款保持正数（见上面 overPaid 的注释），其余情况一律由图标决定方向
+                    val newBalance = if (overPaid) input.coerceAtLeast(0.0)
+                    else signedBalanceOf(account.type, account.iconId, input)
                     val newLimit = if (account.type == AccountType.CREDIT)
                         limitText.toDoubleOrNull() ?: account.creditLimit
                     else account.creditLimit
-                    onSave(account.copy(name = name.trim(), balance = newBalance, creditLimit = newLimit))
+                    onSave(account.copy(
+                        name = name.trim(),
+                        balance = newBalance,
+                        creditLimit = newLimit,
+                        note = noteText.trim()
+                    ))
                 }
             )
         }

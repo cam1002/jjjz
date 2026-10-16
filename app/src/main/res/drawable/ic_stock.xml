@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 工商银行：红色立体渐变 + 古钱环抱「工」 -->
+<!--
+  股票（投资账户）：玫红立体底 + 白色 K 线（三根蜡烛 + 上下影线）。
+  和同类的 ic_fund（基金：柱状 + 上升趋势线）刻意区分开：一个是蜡烛、一个是柱子，
+  并排摆在投资那两格里一眼分得清。底色走 A 股的涨红，和信用卡的酒红、白条的正红不同档。
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
     android:width="24dp" android:height="24dp"
@@ -7,8 +11,8 @@
     <path android:pathData="M5,0 L19,0 A5,5 0 0,1 24,5 L24,19 A5,5 0 0,1 19,24 L5,24 A5,5 0 0,1 0,19 L0,5 A5,5 0 0,1 5,0 Z">
         <aapt:attr name="android:fillColor">
             <gradient android:type="linear" android:startX="2" android:startY="1" android:endX="22" android:endY="23">
-                <item android:offset="0" android:color="#FFE24A40"/>
-                <item android:offset="1" android:color="#FFAE1616"/>
+                <item android:offset="0" android:color="#FFF6728A"/>
+                <item android:offset="1" android:color="#FFC0233C"/>
             </gradient>
         </aapt:attr>
     </path>
@@ -20,8 +24,10 @@
             </gradient>
         </aapt:attr>
     </path>
-    <path android:strokeColor="#FFFFFF" android:strokeWidth="1.9" android:strokeLineCap="round"
-        android:pathData="M18.2,6.8 A8,8 0 1 0 18.2,17.2"/>
-    <path android:strokeColor="#FFFFFF" android:strokeWidth="2.3" android:strokeLineCap="round"
-        android:pathData="M8,8.4 H16 M8,15.6 H16 M12,8.4 V15.6"/>
+    <!-- 影线 -->
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="1.2" android:strokeLineCap="round" android:fillColor="#00000000"
+        android:pathData="M6.7,8.4 V19.6 M12,4.4 V15.2 M17.3,6.8 V17.8"/>
+    <!-- 三根蜡烛实体 -->
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M5.1,11 H8.3 V17.2 H5.1 Z M10.4,7.2 H13.6 V12.6 H10.4 Z M15.7,9.6 H18.9 V15.4 H15.7 Z"/>
 </vector>
