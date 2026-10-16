@@ -88,6 +88,8 @@ GlassLedger/
 
 收据专用件（`ui/components/ReceiptCard.kt`）：`ReceiptSurface`（扇贝撕边白纸 + 压边徽标）、`ReceiptCategoryBadge`、`DottedLeader`（点线/分隔线）。它们只负责"纸"的形状（Canvas 现算路径），按钮、弹窗、页面骨架、状态栏仍然全部走 Base 层，不另立一套风格。
 
+滚轮专用件（`ui/components/NumberWheel.kt`）：`NumberWheel(values, selectedIndex, showTwoDigits, onSelected)` 是**受控组件**，`selectedIndex` 就是外部那个值（`DateTimeWheelDialog` 传年/月/日/时/分五个状态进来），外部改了它滚轮自己滚过去 —— 点「当前日期」一次性回填后，五个滚轮会一起跳到现在。两条不能写回去的死路：滚动位置由 `rememberLazyListState` 持有，它只认首次组合的初始索引，所以程序化赋值必须显式 `animateScrollToItem`，而且**不能拿 `listState.isScrollInProgress` 当闸门**（手势和吸附动画期间它一直是 true，会变成"状态已经改了、滚轮不动"）；组件内部表示"当前居中"的派生值不能叫 `selectedIndex`，否则遮蔽同名参数，effect 变成自己和自己判等。程序化滚动与手势上报靠 `programmaticScroll` + `lastEmitted` 两个标记互斥，保证不会来回打转。
+
 ## 退款与统计口径
 
 - `records.refunded`（Room v3 新增列，`@ColumnInfo(defaultValue = "0")` 必须写，否则 `ALTER TABLE ... DEFAULT 0` 过不了迁移校验）。

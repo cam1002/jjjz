@@ -28,12 +28,17 @@ render.experimental.xml
 *.jks
 *.keystore
 
+# macOS 访达随手生成的元数据（每个目录都可能冒一个，所以不加路径前缀）
+.DS_Store
+
+# Android Studio「Build APK(s)」的产物目录 app/release/：
+# 里面的 *.apk 和 output-metadata.json 上面已经忽略了，但 baselineProfiles/*.dm 没有，
+# 整目录忽略掉才不会再出现在 git status 里。只写这一条路径、不写裸的 release/，
+# 免得以后真要建一个叫 release 的源码目录时被无声忽略。
+/app/release/
+
 # Google Services (e.g. APIs or Firebase)
 google-services.json
 
 # Android Profiling
-<<<<<<< HEAD
 *.hprof
-=======
-*.hprof
->>>>>>> b7bdf7101256957fa76579f08c5a4f41838a26f8

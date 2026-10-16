@@ -97,14 +97,14 @@ fun DateTimeWheelDialog(
             ) {
                 NumberWheel(
                     values = years,
-                    initialIndex = years.indexOf(year),
+                    selectedIndex = years.indexOf(year),
                     modifier = Modifier.weight(1.35f),
                     onSelected = { year = years[it] }
                 )
                 WheelSuffix("年")
                 NumberWheel(
                     values = months,
-                    initialIndex = month - 1,
+                    selectedIndex = month - 1,
                     modifier = Modifier.weight(0.9f),
                     showTwoDigits = false,
                     onSelected = { month = it + 1 }
@@ -112,21 +112,21 @@ fun DateTimeWheelDialog(
                 WheelSuffix("月")
                 NumberWheel(
                     values = days,
-                    initialIndex = (day - 1).coerceAtMost(daysInMonth - 1),
+                    selectedIndex = (day - 1).coerceAtMost(daysInMonth - 1),
                     modifier = Modifier.weight(0.9f),
                     onSelected = { day = it + 1 }
                 )
                 WheelSuffix("日")
                 NumberWheel(
                     values = hours,
-                    initialIndex = hour,
+                    selectedIndex = hour,
                     modifier = Modifier.weight(0.85f),
                     showTwoDigits = true,
                     onSelected = { hour = it }
                 )
                 NumberWheel(
                     values = minutes,
-                    initialIndex = minute,
+                    selectedIndex = minute,
                     modifier = Modifier.weight(0.85f),
                     showTwoDigits = true,
                     onSelected = { minute = it }

@@ -17,8 +17,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,18 +31,27 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
  * 数字滚轮（iOS 风格）：上下滑动选择，松手自动吸附到整格，中间高亮。
  * 用于年月日时分日期选择器。
+ *
+ * [selectedIndex] 是**受控**的外部值：外部改了它（例如点「当前日期」一次性回填年月日时分），
+ * 滚轮自己滚过去；手势滑动结束后用 [onSelected] 把值报回外部。
+ * 两个方向靠 [lastEmitted] + [programmaticScroll] 互斥，所以不会出现
+ * "外部已经是现在、滚轮还停在旧位置"或者"滚轮把旧位置又塞回外部"的来回打架。
+ *
+ * 另外注意 `rememberLazyListState` 只认首次组合的初始索引，之后传新值进来一律忽略，
+ * 所以程序化赋值必须显式 scrollToItem。
  */
 @Composable
 fun NumberWheel(
     values: List<Int>,
-    initialIndex: Int,
+    selectedIndex: Int,
     modifier: Modifier = Modifier,
     showTwoDigits: Boolean = false,
     onSelected: (Int) -> Unit
@@ -49,7 +60,7 @@ fun NumberWheel(
     val itemHeight = 40.dp
     val itemHeightPx = with(LocalDensity.current) { itemHeight.toPx() }
     val listState = rememberLazyListState(
-        initialFirstVisibleItemIndex = initialIndex.coerceIn(0, values.lastIndex)
+        initialFirstVisibleItemIndex = selectedIndex.coerceIn(0, values.lastIndex)
     )
 
     /** 当前居中的项索引（含滑动中的四舍五入） */
@@ -58,26 +69,56 @@ fun NumberWheel(
             (listState.firstVisibleItemScrollOffset / itemHeightPx).roundToInt())
             .coerceIn(0, values.lastIndex)
 
-    val selectedIndex by remember { derivedStateOf { centeredIndex() } }
+    /**
+     * 滚轮当前居中的索引，供高亮用。
+     * 注意别叫 `selectedIndex`：那会遮蔽同名参数，"跟随外部赋值"的 effect 会变成自己和自己判等。
+     */
+    val centered by remember { derivedStateOf { centeredIndex() } }
     val scope = rememberCoroutineScope()
 
-    // 松手后吸附到整格并回调
-    LaunchedEffect(listState, values.size) {
-        snapshotFlow {
-            if (listState.isScrollInProgress) null else centeredIndex()
+    // 程序化滚动标记：滚动期间不接受手势上报，避免覆盖外部刚写进去的值
+    var programmaticScroll by remember { mutableStateOf(false) }
+    // 上一次报给外部的索引；只有它和居中索引不一致时才回调，天然断开"赋值 -> 上报 -> 再赋值"的循环
+    var lastEmitted by remember { mutableStateOf(selectedIndex.coerceIn(0, values.lastIndex)) }
+
+    // 1) 外部把值改了（「当前日期」一次性回填）就把滚轮滚过去。
+    //    这里不能用 isScrollInProgress 当闸门：手滑动/吸附动画期间它可能一直为 true，
+    //    那样外部值已经更新、滚轮却一次都不动，就是之前那个 bug。
+    LaunchedEffect(selectedIndex, values.size) {
+        val target = selectedIndex.coerceIn(0, values.lastIndex)
+        if (centered != target) {
+            programmaticScroll = true
+            listState.animateScrollToItem(target)
+            lastEmitted = target
+            programmaticScroll = false
         }
-            .filterNotNull()
+    }
+
+    // 2) 用户手势停下之后：吸附到整格 + 把值报回外部
+    LaunchedEffect(listState, values.size) {
+        snapshotFlow { listState.isScrollInProgress }
             .distinctUntilChanged()
-            .collect { idx ->
-                listState.animateScrollToItem(idx)
-                onSelected(idx)
+            .filter { !it }
+            .collect {
+                if (programmaticScroll) return@collect
+                val idx = centeredIndex()
+                if (abs(listState.firstVisibleItemScrollOffset) > 1 ||
+                    listState.firstVisibleItemIndex != idx
+                ) {
+                    listState.animateScrollToItem(idx)
+                }
+                if (idx != lastEmitted) {
+                    lastEmitted = idx
+                    onSelected(idx)
+                }
             }
     }
 
-    // 列表长度变化（如换月后天数变少）时把滚轮夹回合法位置
+    // 3) 列表长度变化（如换月后天数变少）时把滚轮夹回合法位置
     LaunchedEffect(values.size) {
         val target = listState.firstVisibleItemIndex.coerceAtMost(values.lastIndex)
         listState.scrollToItem(target)
+        lastEmitted = target
     }
 
     Box(modifier.height(itemHeight * 5)) {
@@ -97,7 +138,7 @@ fun NumberWheel(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             itemsIndexed(values) { i, v ->
-                val sel = i == selectedIndex
+                val sel = i == centered
                 Box(
                     Modifier
                         .height(itemHeight)
@@ -106,7 +147,12 @@ fun NumberWheel(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
                         ) {
-                            scope.launch { listState.animateScrollToItem(i) }
+                            scope.launch {
+                                programmaticScroll = true
+                                listState.animateScrollToItem(i)
+                                lastEmitted = i
+                                programmaticScroll = false
+                            }
                             onSelected(i)
                         },
                     contentAlignment = Alignment.Center
