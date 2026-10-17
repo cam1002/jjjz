@@ -53,6 +53,19 @@ data class StatsUi(
 
 enum class StatsPeriod { WEEK, MONTH }
 
+/**
+ * 主题模式偏好（设置页「通用」）。
+ *
+ * 注意：**目前只是把用户的选择存下来，还没有接入配色**。整套玻璃配色（GlassTokens、
+ * theme/Color.kt 的底色光斑、白玻璃 + 深墨字）是按浅色写死的，深色要再配一套并逐屏核对，
+ * 这一版按约定先不放功能，所以在这里改 `GlassLedgerTheme` 之前，选哪档界面都不变。
+ */
+enum class ThemeMode(val label: String) {
+    SYSTEM("跟随系统"),
+    LIGHT("浅色"),
+    DARK("深色")
+}
+
 /** 账户详情页：单月统计 */
 data class MonthStat(
     val month: Int,
@@ -74,7 +87,9 @@ data class AccountDetailUi(
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class MainViewModel(
     private val repo: LedgerRepository,
-    private val prefs: android.content.SharedPreferences
+    private val prefs: android.content.SharedPreferences,
+    /** 本机首次安装应用的日期（epoch day），由 Factory 从包信息里取 */
+    private val installEpochDay: Long
 ) : ViewModel() {
 
     val selectedMonth = MutableStateFlow(YearMonth.now())
@@ -97,6 +112,28 @@ class MainViewModel(
     var lastAccountId: Long
         get() = prefs.getLong(KEY_LAST_ACCOUNT, 0L)
         set(value) = prefs.edit().putLong(KEY_LAST_ACCOUNT, value).apply()
+
+    /**
+     * 主题模式偏好（设置页）。存下来是给以后接深色配色用的，
+     * **当前版本选了不会改变界面**，原因见 [ThemeMode] 的说明。
+     */
+    var themeMode: ThemeMode
+        get() = prefs.getString(KEY_THEME_MODE, null)
+            ?.let { saved -> ThemeMode.entries.firstOrNull { it.name == saved } }
+            ?: ThemeMode.SYSTEM
+        set(value) = prefs.edit().putString(KEY_THEME_MODE, value.name).apply()
+
+    /**
+     * 坚持记账天数：从今天数到首次安装那天，**安装当天算第 1 天**。
+     * 用系统的 firstInstallTime 而不是自己记时间戳 —— 它天然就是"这个应用装进来多久"，
+     * Studio 反复 Run（覆盖安装）不会重置，只有卸载重装才归零。
+     */
+    val daysTracked: Int
+        get() = (LocalDate.now().toEpochDay() - installEpochDay).coerceAtLeast(0L).toInt() + 1
+
+    /** 设置页「总账单数」：全库流水条数（含已退款，口径见 RecordDao.observeTotalCount） */
+    val recordCount: StateFlow<Int> = repo.observeRecordCount()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
 
     /** 资产总额（资金+充值+投资） */
     val assetTotal: StateFlow<Double> = repo.observeAssetTotal()
@@ -337,6 +374,7 @@ class MainViewModel(
     companion object {
         private const val PREFS_NAME = "glass_ledger_prefs"
         private const val KEY_LAST_ACCOUNT = "lastAccountId"
+        private const val KEY_THEME_MODE = "themeMode"
 
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
@@ -344,10 +382,24 @@ class MainViewModel(
                 // 首选项而不是数据库表：这只是个界面偏好，不该跟着备份/导出走
                 MainViewModel(
                     app.repository,
-                    app.getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE)
+                    app.getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE),
+                    installEpochDay(app)
                 )
             }
         }
+
+        /**
+         * 首次安装日期。先换算成默认时区的本地日期再取 epoch day，
+         * 否则 UTC 与本地差几小时会在边界上算错一天；拿不到就退回今天，
+         * 最坏情况是显示 1 天，不会崩。
+         */
+        private fun installEpochDay(app: android.content.Context): Long = runCatching {
+            val info = app.packageManager.getPackageInfo(app.packageName, 0)
+            java.time.Instant.ofEpochMilli(info.firstInstallTime)
+                .atZone(java.time.ZoneId.systemDefault())
+                .toLocalDate()
+                .toEpochDay()
+        }.getOrDefault(LocalDate.now().toEpochDay())
     }
 }
 

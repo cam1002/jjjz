@@ -84,6 +84,14 @@ interface RecordDao {
     fun observeExpenseByCategory(start: Long, end: Long): Flow<List<CategorySum>>
 
     /**
+     * 设置页的「总账单数」：全库流水条数。
+     * 这里是**故意不排除 refunded** 的 —— 口径是"记过多少笔账"，
+     * 一笔退款过的账单确实被记下来过，和统计页"花了多少"那套 refunded = 0 的口径不是一回事。
+     */
+    @Query("SELECT COUNT(*) FROM records")
+    fun observeTotalCount(): Flow<Int>
+
+    /**
      * 删除账户时把该账户下的流水「解绑」：accountId 置 0，流水本身保留。
      * records 表没有对 accounts 的外键约束，所以 0 这个不存在的 id 是合法值，
      * UI 侧取不到账户时沿用 MainViewModel.toView 里原来的「已删除账户」兜底名。

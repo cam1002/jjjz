@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -73,20 +74,7 @@ fun AccountIcon(
 ) {
     val resId = IconCatalog.resOf(iconId)
     if (iconId == IconCatalog.OTHER_ID || resId == 0) {
-        val base = Color(colorArgb)
-        Box(
-            modifier
-                .size(size)
-                .clip(RoundedCornerShape(size / 3.2f))
-                .background(
-                    Brush.linearGradient(listOf(base.blendTowardsWhite(0.24f), base, base.shade(0.78f)))
-                )
-                // 顶部高光，和同批立体渐变图标保持同一质感
-                .background(
-                    Brush.verticalGradient(0f to Color(0x30FFFFFF), 0.55f to Color(0x00FFFFFF))
-                ),
-            contentAlignment = Alignment.Center
-        ) {
+        BrandTile(Color(colorArgb), size, modifier) {
             val letter = name.trim().firstOrNull()?.toString() ?: "其"
             val letterSize = with(androidx.compose.ui.platform.LocalDensity.current) { (size / 2.2f).toSp() }
             Text(
@@ -108,6 +96,46 @@ fun AccountIcon(
 
 /** 按系数压暗（保留透明度），用于立体底板的暗端 */
 private fun Color.shade(f: Float) = Color(red * f, green * f, blue * f, alpha)
+
+/**
+ * 立体渐变底板：品牌色三段渐变 + 顶部高光，圆角 = 边长 / 3.2。
+ * 账户图标的「没有 logo」兜底块、设置页的行图标都用它，保证同一套质感。
+ */
+@Composable
+fun BrandTile(
+    base: Color,
+    size: Dp,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Box(
+        modifier
+            .size(size)
+            .clip(RoundedCornerShape(size / 3.2f))
+            .background(
+                Brush.linearGradient(listOf(base.blendTowardsWhite(0.24f), base, base.shade(0.78f)))
+            )
+            // 顶部高光，和同批立体渐变图标保持同一质感
+            .background(
+                Brush.verticalGradient(0f to Color(0x30FFFFFF), 0.55f to Color(0x00FFFFFF))
+            ),
+        contentAlignment = Alignment.Center
+    ) { content() }
+}
+
+/** 彩色立体底板 + 白色字形（设置页那种 iOS 风格行图标） */
+@Composable
+fun GlyphTile(
+    icon: ImageVector,
+    base: Color,
+    size: Dp = 34.dp,
+    modifier: Modifier = Modifier,
+    contentDescription: String? = null
+) {
+    BrandTile(base, size, modifier) {
+        Icon(icon, contentDescription, tint = Color.White, modifier = Modifier.size(size * 0.55f))
+    }
+}
 
 /** 分类图标：圆形浅色底 + 主题色 Material 图标 */
 @Composable

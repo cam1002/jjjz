@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.InsertChart
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,10 +33,11 @@ import com.glass.ledger.ui.theme.InkSecondary
 enum class Tab(val label: String, val icon: ImageVector) {
     LEDGER("记账", Icons.AutoMirrored.Filled.MenuBook),
     ASSETS("资产", Icons.Filled.AccountBalanceWallet),
-    STATS("统计", Icons.Filled.InsertChart)
+    STATS("统计", Icons.Filled.InsertChart),
+    SETTINGS("设置", Icons.Filled.Settings)
 }
 
-/** 悬浮液态玻璃底部 Tab 栏 */
+/** 悬浮液态玻璃底部 Tab 栏：记账 / 资产 / 统计 / 设置 */
 @Composable
 fun GlassBottomBar(
     selected: Tab,

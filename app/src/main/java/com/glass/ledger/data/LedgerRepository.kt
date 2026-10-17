@@ -86,6 +86,9 @@ class LedgerRepository(private val db: AppDatabase) {
     /** 单条流水（账单详情页用；被删除后流出发 null） */
     fun observeRecord(id: Long): Flow<RecordEntity?> = recordDao.observeById(id)
 
+    /** 设置页「总账单数」：全库流水条数（含已退款，见 DAO 注释） */
+    fun observeRecordCount(): Flow<Int> = recordDao.observeTotalCount()
+
     /** 记一笔并同步账户余额 */
     suspend fun addRecord(record: RecordEntity) {
         val id = recordDao.insert(record)

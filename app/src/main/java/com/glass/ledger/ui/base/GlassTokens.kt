@@ -9,7 +9,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * 玻璃记账设计令牌（Base 层，全站唯一来源）。
+ * 简洁记账设计令牌（Base 层，全站唯一来源）。
  *
  * 约定：新界面不允许写死圆角、投影、透明度、品牌渐变，一律用这里的 token。
  * 想整体调风格（更透/更实、更圆、阴影更重），只改这一个文件。

@@ -43,6 +43,7 @@ import com.glass.ledger.ui.screens.AddRecordSheet
 import com.glass.ledger.ui.screens.AssetsScreen
 import com.glass.ledger.ui.screens.LedgerScreen
 import com.glass.ledger.ui.screens.RecordDetailScreen
+import com.glass.ledger.ui.screens.SettingsScreen
 import com.glass.ledger.ui.screens.StatsScreen
 import com.glass.ledger.ui.theme.GlassLedgerTheme
 
@@ -82,6 +83,7 @@ fun GlassLedgerRoot(vm: MainViewModel = viewModel(factory = MainViewModel.Factor
                 onAddAccount = { showTypePicker = true }
             )
             Tab.STATS -> StatsScreen(vm, contentPadding = topPadding)
+            Tab.SETTINGS -> SettingsScreen(vm, contentPadding = topPadding)
         }
 
         // 悬浮记账按钮（右下角，底栏之上）：仅在记账页且没有任何全屏覆盖层时显示
@@ -105,7 +107,7 @@ fun GlassLedgerRoot(vm: MainViewModel = viewModel(factory = MainViewModel.Factor
             }
         }
 
-        // 悬浮玻璃底部 Tab：记账 / 资产 / 统计（对齐到屏幕底部）
+        // 悬浮玻璃底部 Tab：记账 / 资产 / 统计 / 设置（对齐到屏幕底部）
         GlassBottomBar(
             selected = tab,
             onSelect = { tab = it },
