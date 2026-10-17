@@ -7,7 +7,6 @@ import android.net.Uri
 import android.os.Build
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -24,22 +23,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
-import androidx.compose.material.icons.filled.Contrast
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Forum
-import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material.icons.filled.ReceiptLong
-import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,16 +44,29 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.glass.ledger.ui.MainViewModel
-import com.glass.ledger.ui.ThemeMode
 import com.glass.ledger.ui.base.GlassTokens
 import com.glass.ledger.ui.components.GlassCard
 import com.glass.ledger.ui.components.GlyphTile
 import com.glass.ledger.ui.components.clickableNoRipple
 import com.glass.ledger.ui.components.liquidGlass
-import com.glass.ledger.ui.theme.ExpenseRed
 import com.glass.ledger.ui.theme.IncomeGreen
 import com.glass.ledger.ui.theme.InkPrimary
 import com.glass.ledger.ui.theme.InkSecondary
+
+/*
+ * 已注销（2026-10-17 深色模式不做了，见文件底部 ThemeModeToggle 那段）：
+ * import androidx.compose.foundation.layout.Arrangement
+ * import androidx.compose.material.icons.automirrored.filled.MenuBook
+ * import androidx.compose.material.icons.filled.Contrast
+ * import androidx.compose.material.icons.filled.DarkMode
+ * import androidx.compose.material.icons.filled.LightMode
+ * import androidx.compose.material.icons.filled.WbSunny
+ * import androidx.compose.runtime.mutableStateOf
+ * import androidx.compose.runtime.remember
+ * import androidx.compose.runtime.setValue
+ * import com.glass.ledger.ui.ThemeMode
+ * import com.glass.ledger.ui.theme.ExpenseRed
+ */
 
 /** 统计卡里「坚持记账天数」那块的小色块颜色（截图是橙色日历） */
 private val TileOrange = Color(0xFFF0913A)
@@ -81,9 +84,6 @@ private const val FEEDBACK_MAIL = "wzc1002@qq.com"
 fun SettingsScreen(vm: MainViewModel, contentPadding: PaddingValues) {
     val context = LocalContext.current
     val recordCount by vm.recordCount.collectAsStateWithLifecycle()
-    // vm.themeMode 是 SharedPreferences 的普通读写、不是可观察状态，所以界面自己存一份镜像，
-    // 切换时同时写回 prefs：杀进程重进还是这一档。
-    var mode by remember { mutableStateOf(vm.themeMode) }
 
     Column(
         Modifier
@@ -139,6 +139,8 @@ fun SettingsScreen(vm: MainViewModel, contentPadding: PaddingValues) {
 //            )
 //        }
 
+        /* 已注销（2026-10-17 决定不做深色模式）。放开这段时要一起放开文件末尾的
+           ThemeModeToggle / themeModeIcon、上面那批 import，以及 MainViewModel 里的 ThemeMode。
         SettingsGroup("通用") {
             // 整行不响应点击：右侧那个三档开关才是控件
             SettingsRow(
@@ -154,6 +156,7 @@ fun SettingsScreen(vm: MainViewModel, contentPadding: PaddingValues) {
                 }
             )
         }
+        */
 
         SettingsGroup("其他") {
             SettingsRow(
@@ -276,6 +279,8 @@ private fun Chevron() {
     )
 }
 
+/* 已注销：深色模式不做了（入口在「通用」那一组，同样已注释）。
+   放开时要连同城主文件里的 ThemeMode、上面那批 import 一起恢复。
 /**
  * 主题模式三档开关（跟随系统 / 浅色 / 深色），样式沿用 [GlassSegmented] 的玻璃胶囊配方，
  * 只是把文字换成图标，好塞进行尾。
@@ -325,6 +330,7 @@ private fun themeModeIcon(mode: ThemeMode): ImageVector = when (mode) {
     ThemeMode.LIGHT -> Icons.Filled.LightMode
     ThemeMode.DARK -> Icons.Filled.DarkMode
 }
+*/
 
 /**
  * 拉起系统邮件客户端写反馈。用 ACTION_SENDTO + mailto: 而不是 ACTION_SEND，

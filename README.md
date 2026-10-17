@@ -22,7 +22,7 @@ Android 记账 APP，iOS 26/27「液态玻璃（Liquid Glass）」视觉风格�
 | 退款 | 详情页点「退款」→ 该笔标记 `refunded` 并把金额原路回补账户余额（事务内完成）；标记后不再计入月概览、饼图、账户统计，列表中淡化显示「已退款」，退款按钮置灰 |
 | 总资产展示 | 净资产 = 资产总额 − 负债总额，且恒等于所有账户余额之和。资产总额 = 资金+充值+投资 三类账户 + 任何正余额（借出、信用卡溢缴款）；负债总额 = 信用+债务 两类里的负余额。两条 SQL 的谓词互斥且互补，所以拆完符号后总数仍然对得上。组头金额：信用账户取相反数（欠多少显示多少），债务账户按净值原样相加（借出+借入可能互相抵消） |
 | 统计（当周/当月、按类别） | `StatsScreen`：环形比例图（Canvas 自绘 `PieChart`）+ 类别占比明细条 |
-| 设置 | `SettingsScreen`（第 4 个 Tab）：顶部两张数据卡「总账单数 / 记账天数」，下面两组一级条目 —— 财务（只留账单管理）、通用（主题模式）+ 其他（意见反馈与反馈）。按参考图去掉 VIP 相关内容；账单管理点了只弹 Toast「后续开放」，主题模式只存偏好不改配色，反馈调起系统邮件 |
+| 设置 | `SettingsScreen`（第 4 个 Tab）：顶部一张数据卡「总账单数 / 记账天数」+「其他」组一行意见反馈（调起系统邮件）。按参考图去掉 VIP；账单管理、主题模式两组已注释（深色模式决定不做），代码原样留在文件里，放开注释即可回来 |
 | 数据全存本地 | Room 单例数据库 `glass_ledger.db`（当前 version = 4），首次启动自动写入默认分类与账户，加字段靠手写 `MIGRATION_x_y`，老数据不丢 |
 
 ## 工程结构
@@ -92,12 +92,12 @@ GlassLedger/
 
 滚轮专用件（`ui/components/NumberWheel.kt`）：`NumberWheel(values, selectedIndex, showTwoDigits, onSelected)` 是**受控组件**，`selectedIndex` 就是外部那个值（`DateTimeWheelDialog` 传年/月/日/时/分五个状态进来），外部改了它滚轮自己滚过去 —— 点「当前日期」一次性回填后，五个滚轮会一起跳到现在。两条不能写回去的死路：滚动位置由 `rememberLazyListState` 持有，它只认首次组合的初始索引，所以程序化赋值必须显式 `animateScrollToItem`，而且**不能拿 `listState.isScrollInProgress` 当闸门**（手势和吸附动画期间它一直是 true，会变成"状态已经改了、滚轮不动"）；组件内部表示"当前居中"的派生值不能叫 `selectedIndex`，否则遮蔽同名参数，effect 变成自己和自己判等。程序化滚动与手势上报靠 `programmaticScroll` + `lastEmitted` 两个标记互斥，保证不会来回打转。
 
-设置页（`ui/screens/SettingsScreen.kt`，第 4 个 Tab）按参考图裁过，只剩「数据卡 + 财务（账单管理）+ 通用（主题模式）+ 其他（意见反馈）」，VIP 相关内容一律没有。两个数字的口径要记住：
+设置页（`ui/screens/SettingsScreen.kt`，第 4 个 Tab）按参考图裁过，VIP 相关内容一律没有；现在实际在屏幕上的是「数据卡 + 其他（意见反馈）」，「账务（账单管理）」和「通用（主题模式）」两组已注释掉、代码仍留在原文件里。两个数字的口径要记住：
 
 - **记账天数**来自系统 `PackageInfo.firstInstallTime`（`MainViewModel.installEpochDay`），`今天 − 安装日 + 1`，安装当天算第 1 天。覆盖安装（`adb install -r`、Android Studio 重跑）不会重置，只有卸载重装才归零，所以它统计的是"这台设备装了这个应用多久"，不是"记了几天账"。
 - **总账单数**是 `SELECT COUNT(*) FROM records`（`RecordDao.observeTotalCount`，走 Flow，记一笔/删一笔都会即时刷新）。这里**故意不排除 `refunded`** —— 这一栏读的是"一共记了多少笔"，和统计页/月概览那些 `AND refunded = 0` 的金额口径是两回事，不要把它们对齐。
 
-三个入口目前都是"放行不放功能"：账本管理点击只弹 Toast（后续开放）；主题模式的三档 `ThemeMode`（跟随系统/浅色/深色）写进 `glass_ledger_prefs / themeMode`、冷启动会记住，但**不改配色**，`GlassLedgerTheme` 仍然只有一套深色玻璃，真接深色得先把 `GlassTokens` 拆成 light/dark 两份；意见反馈用 `ACTION_SENDTO + mailto:` 调起系统邮件，正文自动带应用版本、机型和 Android 版本，本机没有邮件应用时 `catch (ActivityNotFoundException)` 退化成 Toast。注意 `SettingsScreen.kt` 里的 `FEEDBACK_MAIL` **还是占位地址** `glass.ledger@example.com`，对外发布前必须换成真实邮箱。
+入口的取舍（2026-10-17）：意见反馈是唯一真正能用的，`ACTION_SENDTO + mailto:` 调起系统邮件，正文自动带应用版本、机型和 Android 版本，本机没有邮件应用时 `catch (ActivityNotFoundException)` 退化成 Toast，收件人是 `SettingsScreen.kt` 顶部的 `FEEDBACK_MAIL`。账单管理（点了只弹 Toast）和主题模式都被注释掉了 —— **深色模式决定不做**：整套玻璃配色（`GlassTokens`、`theme/Color.kt` 的底色与光斑、白玻璃 + 深墨字）按浅色写死，真要做要么把 `InkPrimary/InkSecondary` 等 token 改成可变值 + `key(主题档)` 整树重建（省，但切换会闪断），要么上 `CompositionLocal` 两套配色（正规，但要机械替换 150 处引用并手工修 `PieChart`/`BalanceLineChart`/`ReceiptCard` 这几个在 `Canvas {}` 绘制域里取颜色的文件）。这两条路都记在这儿，以后要捡起来直接用。注销的代码用块注释原样留在 `SettingsScreen.kt` / `MainViewModel.kt` 里（Kotlin 块注释可嵌套，所以 KDoc 也能整段包住），放开注释 + 恢复那批 import 就能回来，`themeMode` 在 `glass_ledger_prefs` 里的旧值无害。
 
 立体渐变底板从 `AccountIcon` 里抽成了 `GlassWidgets.kt` 的 `BrandTile` / `GlyphTile`（账户图标和设置页每一行的彩色图标共用同一套画法），再要一个"品牌色底板 + 白色图形"直接调它们，别复制粘贴那段渐变。
 

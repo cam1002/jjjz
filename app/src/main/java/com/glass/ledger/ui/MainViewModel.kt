@@ -53,6 +53,11 @@ data class StatsUi(
 
 enum class StatsPeriod { WEEK, MONTH }
 
+/*
+ * 2026-10-17：深色模式决定不做了，主题模式这套先注销。
+ * 恢复时把这里和下面的 themeMode / KEY_THEME_MODE，
+ * 连同 SettingsScreen 里「通用」那一组 + ThemeModeToggle 一起放开就行。
+ *
 /**
  * 主题模式偏好（设置页「通用」）。
  *
@@ -65,6 +70,7 @@ enum class ThemeMode(val label: String) {
     LIGHT("浅色"),
     DARK("深色")
 }
+*/
 
 /** 账户详情页：单月统计 */
 data class MonthStat(
@@ -113,6 +119,7 @@ class MainViewModel(
         get() = prefs.getLong(KEY_LAST_ACCOUNT, 0L)
         set(value) = prefs.edit().putLong(KEY_LAST_ACCOUNT, value).apply()
 
+    /* 已注销：见文件顶部 ThemeMode 的说明。
     /**
      * 主题模式偏好（设置页）。存下来是给以后接深色配色用的，
      * **当前版本选了不会改变界面**，原因见 [ThemeMode] 的说明。
@@ -122,6 +129,7 @@ class MainViewModel(
             ?.let { saved -> ThemeMode.entries.firstOrNull { it.name == saved } }
             ?: ThemeMode.SYSTEM
         set(value) = prefs.edit().putString(KEY_THEME_MODE, value.name).apply()
+    */
 
     /**
      * 坚持记账天数：从今天数到首次安装那天，**安装当天算第 1 天**。
@@ -374,7 +382,7 @@ class MainViewModel(
     companion object {
         private const val PREFS_NAME = "glass_ledger_prefs"
         private const val KEY_LAST_ACCOUNT = "lastAccountId"
-        private const val KEY_THEME_MODE = "themeMode"
+        // 已注销（深色模式不做了）：private const val KEY_THEME_MODE = "themeMode"
 
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
