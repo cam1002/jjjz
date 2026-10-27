@@ -83,9 +83,9 @@ private const val CREDIT_SUFFIX = "信用卡"
  *
  * 两条老约定不变：底色一律取图标品牌色（[IconCatalog.colorOf]）；
  * 名称没被手动改过时，选图标就自动填图标名。
- * 账户名**全局唯一**（不分类型）：重名时点保存不关弹窗，名称栏下面出一行「账户名称已存在」。
- * 自动填的名字也算 —— 比如已经有「微信」钱包，再开一个资金账户点「微信」，一样得先改名；
- * 各类型末尾那格「其他」同理，第二个「其他」账户得自己起个名。
+ * 账户名**同一类型内唯一**（跨类型可以重名，资产页本来就按类型分组）：重名时点保存不关弹窗，
+ * 名称栏下面出一行「账户名称已存在」。自动填的名字也算 —— 已经有「微信」钱包，
+ * 再开一个资金账户点「微信」，一样得先改名；同一类型里开第二个「其他」也一样。
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -117,8 +117,8 @@ fun AddAccountSheet(
     val limit = limitText.toDoubleOrNull()
     val canSave = name.isNotBlank() && (type != AccountType.CREDIT || limit != null)
 
-    /** 账户名全局唯一；提示只在点过「保存」之后出现，边打字就报错太吵 */
-    val nameDuplicated = vm.isAccountNameTaken(name)
+    /** 账户名同类型内唯一；提示只在点过「保存」之后出现，边打字就报错太吵 */
+    val nameDuplicated = vm.isAccountNameTaken(name, type)
     var nameErrorShown by remember { mutableStateOf(false) }
 
     // 选银行时用返回箭头回表单，其余情况关闭整个弹窗
@@ -233,7 +233,8 @@ fun AddAccountSheet(
                             nameEdited = it.isNotBlank()
                         }
                     )
-                    // 名字重复：紧贴在名称栏下面一行红字（放在保存按钮旁边会把按钮顶得上下跳）
+                    // 名字重复：紧贴在名称栏下面一行红字（放在保存按钮旁边会把按钮顶得上下跳）。
+                    // 文案不写"同类型"，因为标题「添加资金账户」已经把范围说清楚了。
                     if (nameErrorShown && nameDuplicated) {
                         Text(
                             "账户名称已存在",

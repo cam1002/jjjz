@@ -367,8 +367,8 @@ private fun YearArrow(symbol: String, enabled: Boolean, onClick: () -> Unit) {
  * 债务账户里的「借出」是别人欠我的（应收），不翻符号，提示语也单独一档。
  * 唯一例外是**溢缴款**（欠债类账户余额为正 = 钱还多了），它按资产算，回填和保存都不翻符号，
  * 否则"打开就保存"会把 +66 悄悄变成 -66。
- * 名称和开户表单一样**全局唯一**：改成别的账户已有的名字，点保存只提示「账户名称已存在」，
- * 弹窗不关，改回唯一的名字才能存。
+ * 名称和开户表单一样在**同一账户类型内唯一**：改成同类型别的账户已有的名字，点保存只提示
+ * 「账户名称已存在」，弹窗不关，改回唯一的名字才能存（账户类型改不了，所以比的就是自己这个类型）。
  */
 @Composable
 private fun EditAccountDialog(
@@ -403,8 +403,8 @@ private fun EditAccountDialog(
 
     val canSave = name.isNotBlank() && balanceText.toDoubleOrNull() != null
 
-    /** 改名也不能撞别的账户（[exceptId] 把自己排除掉），提示规则和开户表单一致 */
-    val nameDuplicated = vm.isAccountNameTaken(name, exceptId = account.id)
+    /** 改名也不能撞同类型的别的账户（[exceptId] 把自己排除掉），提示规则和开户表单一致 */
+    val nameDuplicated = vm.isAccountNameTaken(name, account.type, exceptId = account.id)
     var nameErrorShown by remember { mutableStateOf(false) }
 
     GlassDialogPanel(title = "修改账户", onDismiss = null, divider = false) {
