@@ -53,6 +53,7 @@ import com.glass.ledger.ui.base.GlassTokens
 import com.glass.ledger.ui.components.AccountIcon
 import com.glass.ledger.ui.components.clickableNoRipple
 import com.glass.ledger.ui.components.liquidGlass
+import com.glass.ledger.ui.theme.ExpenseRed
 import com.glass.ledger.ui.theme.InkPrimary
 import com.glass.ledger.ui.theme.InkSecondary
 
@@ -82,6 +83,9 @@ private const val CREDIT_SUFFIX = "信用卡"
  *
  * 两条老约定不变：底色一律取图标品牌色（[IconCatalog.colorOf]）；
  * 名称没被手动改过时，选图标就自动填图标名。
+ * 账户名**全局唯一**（不分类型）：重名时点保存不关弹窗，名称栏下面出一行「账户名称已存在」。
+ * 自动填的名字也算 —— 比如已经有「微信」钱包，再开一个资金账户点「微信」，一样得先改名；
+ * 各类型末尾那格「其他」同理，第二个「其他」账户得自己起个名。
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -112,6 +116,10 @@ fun AddAccountSheet(
     val balance = balanceText.toDoubleOrNull() ?: 0.0
     val limit = limitText.toDoubleOrNull()
     val canSave = name.isNotBlank() && (type != AccountType.CREDIT || limit != null)
+
+    /** 账户名全局唯一；提示只在点过「保存」之后出现，边打字就报错太吵 */
+    val nameDuplicated = vm.isAccountNameTaken(name)
+    var nameErrorShown by remember { mutableStateOf(false) }
 
     // 选银行时用返回箭头回表单，其余情况关闭整个弹窗
     val dismissOrBack = { if (showBanks) showBanks = false else onDismiss() }
@@ -225,6 +233,15 @@ fun AddAccountSheet(
                             nameEdited = it.isNotBlank()
                         }
                     )
+                    // 名字重复：紧贴在名称栏下面一行红字（放在保存按钮旁边会把按钮顶得上下跳）
+                    if (nameErrorShown && nameDuplicated) {
+                        Text(
+                            "账户名称已存在",
+                            fontSize = GlassTokens.Type.Caption.sp,
+                            color = ExpenseRed,
+                            modifier = Modifier.padding(bottom = 10.dp)
+                        )
+                    }
 
                     when (type) {
                         AccountType.CREDIT -> {
@@ -261,16 +278,20 @@ fun AddAccountSheet(
                 text = "保存",
                 enabled = canSave,
                 onClick = {
-                    vm.addAccount(
-                        name = name.trim(),
-                        iconId = currentIconId,
-                        colorArgb = color,
-                        type = type,
-                        initialBalance = balance,
-                        creditLimit = if (type == AccountType.CREDIT) limit else null,
-                        note = noteText
-                    )
-                    onDismiss()
+                    // 重名就留在表单里改，不能默默存下第二个同名账户
+                    nameErrorShown = nameDuplicated
+                    if (!nameDuplicated) {
+                        vm.addAccount(
+                            name = name.trim(),
+                            iconId = currentIconId,
+                            colorArgb = color,
+                            type = type,
+                            initialBalance = balance,
+                            creditLimit = if (type == AccountType.CREDIT) limit else null,
+                            note = noteText
+                        )
+                        onDismiss()
+                    }
                 }
             )
             Spacer(Modifier.height(GlassTokens.Space.Gap))

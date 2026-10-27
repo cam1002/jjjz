@@ -3,8 +3,6 @@ package com.glass.ledger.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,11 +28,13 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.glass.ledger.data.AccountEntity
 import com.glass.ledger.data.AccountType
+import com.glass.ledger.data.CategoryEntity
 import com.glass.ledger.data.IconCatalog
 import com.glass.ledger.data.NO_ACCOUNT_ICON
 import com.glass.ledger.data.NO_ACCOUNT_ID
@@ -63,7 +63,6 @@ import com.glass.ledger.ui.theme.InkSecondary
  *
  * 骨架、顶栏、状态栏、主按钮全部来自 Base 层（GlassPageDialog / GlassPrimaryButton / GlassTokens）。
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AddRecordSheet(
     vm: MainViewModel,
@@ -187,37 +186,7 @@ fun AddRecordSheet(
         Spacer(Modifier.height(GlassTokens.Space.SectionTop))
         SectionHeader("分类")
         Spacer(Modifier.height(GlassTokens.Space.Row))
-        FlowRow(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            cats.forEach { c ->
-                val sel = c.id == categoryId
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .then(
-                            if (sel) Modifier.liquidGlass(
-                                shape = GlassTokens.Corner.Chip,
-                                alpha = GlassTokens.Surface.Card,
-                                elevation = GlassTokens.Elevation.Chip
-                            ) else Modifier.padding(4.dp)
-                        )
-                        .clickableNoRipple { categoryId = c.id }
-                        .padding(horizontal = 8.dp, vertical = 6.dp)
-                ) {
-                    CategoryIcon(c.iconKey, c.colorArgb, size = 34.dp)
-                    Text(
-                        c.name,
-                        fontSize = 11.sp,
-                        color = if (sel) InkPrimary else InkSecondary,
-                        fontWeight = if (sel) FontWeight.SemiBold else FontWeight.Normal,
-                        modifier = Modifier.padding(top = 3.dp)
-                    )
-                }
-            }
-        }
+        CategoryGrid(cats = cats, categoryId = categoryId, onPick = { categoryId = it })
 
         Spacer(Modifier.height(GlassTokens.Space.SectionTop))
 
@@ -327,6 +296,88 @@ private fun SectionHeader(text: String) {
         fontWeight = FontWeight.SemiBold,
         color = InkPrimary
     )
+}
+
+/** 分类格子：一行 5 格，格间距 */
+private val CATEGORY_GAP = 10.dp
+
+/** 玻璃底外面再留的一圈透明内边距 —— 选中和未选中都有，见 [CategoryGrid] */
+private val CATEGORY_CELL_INSET = 4.dp
+
+/**
+ * 分类格子（图标 + 名称，一排五个）。
+ *
+ * **格子必须定宽，而且两种状态的测量尺寸要完全一样**，否则点一下就整排跳位：
+ * 旧写法是 `FlowRow` + 内容撑宽，选中那一格把 `padding(4.dp)` 换成了 `liquidGlass(...)`
+ * （等于四周透明内边距没了，当场窄 8dp、矮 8dp），同时文字从 Normal 变 SemiBold 又宽一点。
+ * FlowRow 是按内容宽度依次排开的，所以只要中间有一格变了尺寸，**它后面每一格都得跟着左右挪**，
+ * 整排还会因为行高变了上下跳一下 —— 就是"点居住再点医疗，图标位置乱跳"的原因。
+ * 现在改成 Row + weight 定宽，外圈内边距两种状态共用，选中只换背景，位置一动不动。
+ */
+@Composable
+private fun CategoryGrid(
+    cats: List<CategoryEntity>,
+    categoryId: Long,
+    onPick: (Long) -> Unit
+) {
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(CATEGORY_GAP)) {
+        cats.chunked(5).forEach { rowCats ->
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(CATEGORY_GAP)
+            ) {
+                // 收入只有 4 个分类，用空位补齐到 5 格，否则 weight 会把这 4 格拉宽，
+                // 和支出那两排的格子对不齐。
+                val cells: List<CategoryEntity?> = rowCats + List(5 - rowCats.size) { null }
+                cells.forEach { c ->
+                    if (c == null) {
+                        Spacer(Modifier.weight(1f))
+                    } else {
+                        CategoryCell(
+                            c,
+                            selected = c.id == categoryId,
+                            modifier = Modifier.weight(1f),
+                            onClick = { onPick(c.id) }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CategoryCell(
+    category: CategoryEntity,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+            .padding(CATEGORY_CELL_INSET)
+            .then(
+                if (selected) Modifier.liquidGlass(
+                    shape = GlassTokens.Corner.Chip,
+                    alpha = GlassTokens.Surface.Card,
+                    elevation = GlassTokens.Elevation.Chip
+                ) else Modifier
+            )
+            .clickableNoRipple(onClick)
+            .padding(horizontal = 4.dp, vertical = 6.dp)
+    ) {
+        CategoryIcon(category.iconKey, category.colorArgb, size = 34.dp)
+        Text(
+            category.name,
+            fontSize = 11.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            color = if (selected) InkPrimary else InkSecondary,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+            modifier = Modifier.padding(top = 3.dp)
+        )
+    }
 }
 
 /**

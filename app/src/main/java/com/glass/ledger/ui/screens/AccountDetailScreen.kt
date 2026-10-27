@@ -325,6 +325,7 @@ fun AccountDetailScreen(
     // ---- 修改账户弹窗 ----
     if (showEdit) {
         EditAccountDialog(
+            vm = vm,
             account = acc,
             onDismiss = { showEdit = false },
             onSave = { updated ->
@@ -366,9 +367,12 @@ private fun YearArrow(symbol: String, enabled: Boolean, onClick: () -> Unit) {
  * 债务账户里的「借出」是别人欠我的（应收），不翻符号，提示语也单独一档。
  * 唯一例外是**溢缴款**（欠债类账户余额为正 = 钱还多了），它按资产算，回填和保存都不翻符号，
  * 否则"打开就保存"会把 +66 悄悄变成 -66。
+ * 名称和开户表单一样**全局唯一**：改成别的账户已有的名字，点保存只提示「账户名称已存在」，
+ * 弹窗不关，改回唯一的名字才能存。
  */
 @Composable
 private fun EditAccountDialog(
+    vm: MainViewModel,
     account: AccountEntity,
     onDismiss: () -> Unit,
     onSave: (AccountEntity) -> Unit
@@ -399,9 +403,21 @@ private fun EditAccountDialog(
 
     val canSave = name.isNotBlank() && balanceText.toDoubleOrNull() != null
 
+    /** 改名也不能撞别的账户（[exceptId] 把自己排除掉），提示规则和开户表单一致 */
+    val nameDuplicated = vm.isAccountNameTaken(name, exceptId = account.id)
+    var nameErrorShown by remember { mutableStateOf(false) }
+
     GlassDialogPanel(title = "修改账户", onDismiss = null, divider = false) {
         Spacer(Modifier.height(GlassTokens.Space.SectionTop))
         EditField(value = name, hint = "账户名称") { name = it }
+        if (nameErrorShown && nameDuplicated) {
+            Text(
+                "账户名称已存在",
+                fontSize = GlassTokens.Type.Caption.sp,
+                color = ExpenseRed,
+                modifier = Modifier.padding(top = 6.dp)
+            )
+        }
 
         Spacer(Modifier.height(10.dp))
         EditField(
@@ -440,6 +456,8 @@ private fun EditAccountDialog(
                 enabled = canSave,
                 modifier = Modifier.weight(1f),
                 onClick = {
+                    nameErrorShown = nameDuplicated
+                    if (nameDuplicated) return@GlassPrimaryButton
                     val input = balanceText.toDoubleOrNull() ?: 0.0
                     // 溢缴款保持正数（见上面 overPaid 的注释），其余情况一律由图标决定方向
                     val newBalance = if (overPaid) input.coerceAtLeast(0.0)

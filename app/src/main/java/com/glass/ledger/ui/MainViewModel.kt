@@ -365,6 +365,19 @@ class MainViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
+    /**
+     * 账户名查重（全局唯一，不分账户类型）。
+     * 两边都去首尾空格再比 —— 「微信 」和「微信」是同一个名字，只是没删掉空格。
+     * [exceptId] 只给「修改账户」改名用：自己不能把自己判成重复。
+     * 走内存里的 [accounts] 流而不是新写一条 SQL：这条流本来就是账户列表的数据源，
+     * 能进到这个界面的地方都已经订阅过它了，值就是当前库里的账户。
+     */
+    fun isAccountNameTaken(name: String, exceptId: Long = 0L): Boolean {
+        val key = name.trim()
+        if (key.isEmpty()) return false
+        return accounts.value.any { it.id != exceptId && it.name.trim() == key }
+    }
+
     fun addAccount(
         name: String,
         iconId: String,
